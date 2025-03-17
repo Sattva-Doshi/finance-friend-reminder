@@ -15,6 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useExpenses } from "@/hooks/use-expenses";
+import { ExpenseType } from "@/lib/supabase";
 
 // Mock categories with icons and colors
 const categories = [
@@ -26,55 +28,12 @@ const categories = [
   { id: "other", name: "Other", color: "bg-gray-500", percent: 8 },
 ];
 
-// Mock expense data
-const expensesMockData = [
-  { 
-    id: "1",
-    title: "Grocery Shopping",
-    amount: 78.35,
-    date: new Date(2023, 6, 15),
-    category: "food",
-    paymentMethod: "credit_card",
-  },
-  { 
-    id: "2",
-    title: "Movie Tickets",
-    amount: 24.99,
-    date: new Date(2023, 6, 18),
-    category: "entertainment",
-    paymentMethod: "debit_card",
-  },
-  { 
-    id: "3",
-    title: "Gas",
-    amount: 45.50,
-    date: new Date(2023, 6, 20),
-    category: "transportation",
-    paymentMethod: "credit_card",
-  },
-  { 
-    id: "4",
-    title: "Electric Bill",
-    amount: 110.25,
-    date: new Date(2023, 6, 22),
-    category: "utilities",
-    paymentMethod: "bank_transfer",
-  },
-  { 
-    id: "5",
-    title: "New Shoes",
-    amount: 89.99,
-    date: new Date(2023, 6, 25),
-    category: "shopping",
-    paymentMethod: "credit_card",
-  },
-];
-
 export default function Expenses() {
-  const [expenses, setExpenses] = useState(expensesMockData);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
+  
+  const { expenses, addExpense, isLoading } = useExpenses();
 
   const filteredExpenses = expenses.filter(expense => {
     const matchesSearch = searchQuery === "" || 
@@ -86,17 +45,16 @@ export default function Expenses() {
   const totalSpent = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   const handleAddExpense = (values: any) => {
-    const newExpense = {
-      id: `${expenses.length + 1}`,
+    const newExpense: ExpenseType = {
       title: values.title,
       amount: values.amount,
-      date: values.date,
+      date: values.date.toISOString(),
       category: values.category,
       paymentMethod: values.paymentMethod,
-      notes: values.notes,
+      notes: values.notes || "",
     };
     
-    setExpenses([newExpense, ...expenses]);
+    addExpense(newExpense);
     setShowAddModal(false);
   };
 
@@ -132,7 +90,17 @@ export default function Expenses() {
                 <div className="h-12 w-px bg-border"></div>
                 <div className="flex flex-col">
                   <span className="text-sm text-muted-foreground">This Month</span>
-                  <span className="text-3xl font-semibold">${totalSpent.toFixed(2)}</span>
+                  <span className="text-3xl font-semibold">
+                    ${expenses
+                      .filter(e => {
+                        const now = new Date();
+                        const expenseDate = new Date(e.date);
+                        return expenseDate.getMonth() === now.getMonth() && 
+                               expenseDate.getFullYear() === now.getFullYear();
+                      })
+                      .reduce((sum, e) => sum + e.amount, 0)
+                      .toFixed(2)}
+                  </span>
                 </div>
               </div>
               
@@ -177,7 +145,11 @@ export default function Expenses() {
           </TabsList>
           
           <TabsContent value="all" className="mt-6">
-            {filteredExpenses.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center p-12">
+                <span>Loading expenses...</span>
+              </div>
+            ) : filteredExpenses.length === 0 ? (
               <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
                 <CreditCardIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">No expenses found</h3>
@@ -198,7 +170,7 @@ export default function Expenses() {
                           <div>
                             <h3 className="font-medium">{expense.title}</h3>
                             <p className="text-sm text-muted-foreground">
-                              {expense.date.toLocaleDateString()} • {categories.find(c => c.id === expense.category)?.name}
+                              {new Date(expense.date).toLocaleDateString()} • {categories.find(c => c.id === expense.category)?.name}
                             </p>
                           </div>
                           <div className="flex items-center gap-4">
@@ -227,7 +199,11 @@ export default function Expenses() {
           
           {categories.map((category) => (
             <TabsContent key={category.id} value={category.id} className="mt-6">
-              {filteredExpenses.length === 0 ? (
+              {isLoading ? (
+                <div className="flex justify-center p-12">
+                  <span>Loading expenses...</span>
+                </div>
+              ) : filteredExpenses.length === 0 ? (
                 <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
                   <CreditCardIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">No {category.name} expenses</h3>
@@ -248,7 +224,7 @@ export default function Expenses() {
                             <div>
                               <h3 className="font-medium">{expense.title}</h3>
                               <p className="text-sm text-muted-foreground">
-                                {expense.date.toLocaleDateString()}
+                                {new Date(expense.date).toLocaleDateString()}
                               </p>
                             </div>
                             <div className="flex items-center gap-4">

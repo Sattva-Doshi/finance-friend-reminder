@@ -1,131 +1,67 @@
 
 import { useState } from "react";
-import { CreditCardIcon, FilterIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { PlusIcon, ArrowUpDownIcon, FilterIcon, SearchIcon } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import PageTransition from "@/components/layout/PageTransition";
 import ReminderCard from "@/components/reminders/ReminderCard";
 import { ReminderForm } from "@/components/reminders/ReminderForm";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/common/Card";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-// Mock data for demo
-const remindersMockData = [
-  {
-    id: "1",
-    title: "Credit Card Bill",
-    amount: 350.50,
-    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-    category: "credit-card" as const,
-    paid: false,
-    recurring: true,
-    priority: "high" as const,
-  },
-  {
-    id: "2",
-    title: "Rent Payment",
-    amount: 1200.00,
-    dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-    category: "rent" as const,
-    paid: false,
-    recurring: true,
-    priority: "medium" as const,
-  },
-  {
-    id: "3",
-    title: "Car EMI",
-    amount: 450.75,
-    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-    category: "emi" as const,
-    paid: false,
-    recurring: true,
-    priority: "high" as const,
-  },
-  {
-    id: "4",
-    title: "Internet Bill",
-    amount: 59.99,
-    dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-    category: "utility" as const,
-    paid: false,
-    recurring: true,
-    priority: "low" as const,
-  },
-  {
-    id: "5",
-    title: "Electricity Bill",
-    amount: 85.50,
-    dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    category: "utility" as const,
-    paid: true,
-    recurring: true,
-    priority: "medium" as const,
-  },
-];
+import { useReminders } from "@/hooks/use-reminders";
+import { ReminderType } from "@/lib/supabase";
 
 export default function Reminders() {
-  const [reminders, setReminders] = useState(remindersMockData);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("upcoming");
   
-  const handleMarkPaid = (id: string) => {
-    setReminders(reminders.map(reminder => 
-      reminder.id === id ? { ...reminder, paid: true } : reminder
-    ));
-  };
-  
-  const handleSnooze = (id: string) => {
-    setReminders(reminders.map(reminder => {
-      if (reminder.id === id) {
-        const newDueDate = new Date(reminder.dueDate);
-        newDueDate.setDate(newDueDate.getDate() + 1);
-        return { ...reminder, dueDate: newDueDate };
-      }
-      return reminder;
-    }));
-  };
-  
-  const filteredReminders = (filterPaid: boolean) => {
-    return reminders
-      .filter(reminder => reminder.paid === filterPaid)
-      .filter(reminder => 
-        searchQuery === "" || 
-        reminder.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-  };
+  const { reminders, addReminder, markReminderPaid, snoozeReminder, isLoading } = useReminders();
+
+  // Filter reminders based on search query and status
+  const filteredReminders = reminders.filter(reminder => {
+    const matchesSearch = searchQuery === "" || 
+      reminder.title.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (filterStatus === "upcoming") {
+      return matchesSearch && !reminder.paid;
+    } else if (filterStatus === "paid") {
+      return matchesSearch && reminder.paid;
+    }
+    
+    return matchesSearch;
+  });
 
   const handleAddReminder = (values: any) => {
-    const newReminder = {
-      id: `${reminders.length + 1}`,
+    const newReminder: ReminderType = {
       title: values.title,
       amount: values.amount,
-      dueDate: values.dueDate,
+      dueDate: values.dueDate.toISOString(),
       category: values.category,
-      paid: false,
       recurring: values.recurring,
       priority: values.priority,
+      paid: false,
     };
     
-    setReminders([newReminder, ...reminders]);
+    addReminder(newReminder);
     setShowAddModal(false);
   };
-  
+
   return (
     <PageTransition>
       <Navbar />
       <main className="page-container animate-fadeIn">
         <div className="page-header flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="page-title">Bill & Payment Reminders</h1>
-            <p className="text-muted-foreground">Never miss a payment again with smart reminders</p>
+            <h1 className="page-title">Payment Reminders</h1>
+            <p className="text-muted-foreground">Track your upcoming payments and bills</p>
           </div>
           
           <Button className="space-x-2" onClick={() => setShowAddModal(true)}>
@@ -139,13 +75,18 @@ export default function Reminders() {
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="flex flex-col">
-                  <span className="text-sm text-muted-foreground">Pending Reminders</span>
-                  <span className="text-3xl font-semibold">{filteredReminders(false).length}</span>
+                  <span className="text-sm text-muted-foreground">Upcoming Payments</span>
+                  <span className="text-3xl font-semibold">{reminders.filter(r => !r.paid).length}</span>
                 </div>
                 <div className="h-12 w-px bg-border"></div>
                 <div className="flex flex-col">
                   <span className="text-sm text-muted-foreground">Total Due Amount</span>
-                  <span className="text-3xl font-semibold">${filteredReminders(false).reduce((sum, reminder) => sum + reminder.amount, 0).toFixed(2)}</span>
+                  <span className="text-3xl font-semibold">
+                    ${reminders
+                      .filter(r => !r.paid)
+                      .reduce((sum, reminder) => sum + reminder.amount, 0)
+                      .toFixed(2)}
+                  </span>
                 </div>
               </div>
               
@@ -159,59 +100,51 @@ export default function Reminders() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="space-x-2">
-                      <FilterIcon className="h-4 w-4" />
-                      <span>Filter</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>All Reminders</DropdownMenuItem>
-                    <DropdownMenuItem>High Priority</DropdownMenuItem>
-                    <DropdownMenuItem>Medium Priority</DropdownMenuItem>
-                    <DropdownMenuItem>Low Priority</DropdownMenuItem>
-                    <DropdownMenuItem>Due Soon</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button variant="outline" className="space-x-2">
+                  <FilterIcon className="h-4 w-4" />
+                  <span>Filter</span>
+                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Tabs defaultValue="pending" className="mb-8">
+        <Tabs defaultValue="upcoming" className="mb-8" onValueChange={setFilterStatus}>
           <TabsList>
-            <TabsTrigger value="pending" className="relative">
-              Pending
-              {filteredReminders(false).length > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                  {filteredReminders(false).length}
-                </span>
-              )}
-            </TabsTrigger>
+            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
             <TabsTrigger value="paid">Paid</TabsTrigger>
-            <TabsTrigger value="all">All Reminders</TabsTrigger>
+            <TabsTrigger value="all">All</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="pending" className="mt-6">
-            {filteredReminders(false).length === 0 ? (
+          <TabsContent value="upcoming" className="mt-6">
+            {isLoading ? (
+              <div className="flex justify-center p-12">
+                <span>Loading reminders...</span>
+              </div>
+            ) : filteredReminders.length === 0 ? (
               <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                <CreditCardIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No pending reminders</h3>
-                <p className="text-muted-foreground mb-6">You're all caught up! Add a new reminder to stay on top of upcoming bills.</p>
+                <h3 className="text-lg font-medium mb-2">No upcoming reminders</h3>
+                <p className="text-muted-foreground mb-6">Add your first reminder to start tracking payments.</p>
                 <Button onClick={() => setShowAddModal(true)}>
                   <PlusIcon className="h-4 w-4 mr-2" />
                   Add Reminder
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredReminders(false).map((reminder) => (
+              <div className="grid-cards">
+                {filteredReminders.map((reminder) => (
                   <ReminderCard
                     key={reminder.id}
-                    {...reminder}
-                    onMarkPaid={handleMarkPaid}
-                    onSnooze={handleSnooze}
+                    id={reminder.id || ""}
+                    title={reminder.title}
+                    amount={reminder.amount}
+                    dueDate={new Date(reminder.dueDate)}
+                    category={reminder.category as any}
+                    paid={reminder.paid || false}
+                    recurring={reminder.recurring}
+                    priority={reminder.priority as any}
+                    onMarkPaid={markReminderPaid}
+                    onSnooze={snoozeReminder}
                   />
                 ))}
               </div>
@@ -219,18 +152,31 @@ export default function Reminders() {
           </TabsContent>
           
           <TabsContent value="paid" className="mt-6">
-            {filteredReminders(true).length === 0 ? (
+            {/* Similar content for paid reminders */}
+            {isLoading ? (
+              <div className="flex justify-center p-12">
+                <span>Loading reminders...</span>
+              </div>
+            ) : filteredReminders.length === 0 ? (
               <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                <CreditCardIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">No paid reminders</h3>
-                <p className="text-muted-foreground">Paid reminders will appear here.</p>
+                <p className="text-muted-foreground">Reminders you mark as paid will appear here.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredReminders(true).map((reminder) => (
+              <div className="grid-cards">
+                {filteredReminders.map((reminder) => (
                   <ReminderCard
                     key={reminder.id}
-                    {...reminder}
+                    id={reminder.id || ""}
+                    title={reminder.title}
+                    amount={reminder.amount}
+                    dueDate={new Date(reminder.dueDate)}
+                    category={reminder.category as any}
+                    paid={reminder.paid || false}
+                    recurring={reminder.recurring}
+                    priority={reminder.priority as any}
+                    onMarkPaid={markReminderPaid}
+                    onSnooze={snoozeReminder}
                   />
                 ))}
               </div>
@@ -238,21 +184,39 @@ export default function Reminders() {
           </TabsContent>
           
           <TabsContent value="all" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {reminders
-                .filter(reminder => 
-                  searchQuery === "" || 
-                  reminder.title.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map((reminder) => (
+            {/* Similar content for all reminders */}
+            {isLoading ? (
+              <div className="flex justify-center p-12">
+                <span>Loading reminders...</span>
+              </div>
+            ) : filteredReminders.length === 0 ? (
+              <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+                <h3 className="text-lg font-medium mb-2">No reminders found</h3>
+                <p className="text-muted-foreground mb-6">Try adjusting your search or add a new reminder.</p>
+                <Button onClick={() => setShowAddModal(true)}>
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Add Reminder
+                </Button>
+              </div>
+            ) : (
+              <div className="grid-cards">
+                {filteredReminders.map((reminder) => (
                   <ReminderCard
                     key={reminder.id}
-                    {...reminder}
-                    onMarkPaid={!reminder.paid ? handleMarkPaid : undefined}
-                    onSnooze={!reminder.paid ? handleSnooze : undefined}
+                    id={reminder.id || ""}
+                    title={reminder.title}
+                    amount={reminder.amount}
+                    dueDate={new Date(reminder.dueDate)}
+                    category={reminder.category as any}
+                    paid={reminder.paid || false}
+                    recurring={reminder.recurring}
+                    priority={reminder.priority as any}
+                    onMarkPaid={markReminderPaid}
+                    onSnooze={snoozeReminder}
                   />
                 ))}
-            </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 

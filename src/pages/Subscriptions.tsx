@@ -1,14 +1,20 @@
-
 import { useState } from "react";
 import { CreditCardIcon, FilterIcon, PlusIcon, SearchIcon } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import PageTransition from "@/components/layout/PageTransition";
 import SubscriptionCard from "@/components/subscriptions/SubscriptionCard";
+import { SubscriptionForm } from "@/components/subscriptions/SubscriptionForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/common/Card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogHeader,
+} from "@/components/ui/dialog";
 
 // Mock data for demo
 const subscriptionsMockData = [
@@ -77,6 +83,7 @@ const subscriptionsMockData = [
 export default function Subscriptions() {
   const [subscriptions, setSubscriptions] = useState(subscriptionsMockData);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
   
   const handleToggleActive = (id: string) => {
     setSubscriptions(subscriptions.map(subscription => 
@@ -106,6 +113,22 @@ export default function Subscriptions() {
         }
       }, 0);
   };
+
+  const handleAddSubscription = (values: any) => {
+    const newSubscription = {
+      id: `${subscriptions.length + 1}`,
+      name: values.name,
+      amount: values.amount,
+      billingCycle: values.billingCycle,
+      nextBillingDate: values.nextBillingDate,
+      logo: values.logo || "",
+      active: true,
+      url: values.url || undefined,
+    };
+    
+    setSubscriptions([newSubscription, ...subscriptions]);
+    setShowAddModal(false);
+  };
   
   return (
     <PageTransition>
@@ -117,7 +140,7 @@ export default function Subscriptions() {
             <p className="text-muted-foreground">Track and manage all your recurring subscriptions</p>
           </div>
           
-          <Button className="space-x-2">
+          <Button className="space-x-2" onClick={() => setShowAddModal(true)}>
             <PlusIcon className="h-4 w-4" />
             <span>Add Subscription</span>
           </Button>
@@ -247,6 +270,18 @@ export default function Subscriptions() {
             </div>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add New Subscription</DialogTitle>
+            </DialogHeader>
+            <SubscriptionForm 
+              onSubmit={handleAddSubscription}
+              onCancel={() => setShowAddModal(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </main>
     </PageTransition>
   );

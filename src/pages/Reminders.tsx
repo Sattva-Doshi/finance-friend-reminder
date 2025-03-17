@@ -1,22 +1,29 @@
 
 import { useState } from "react";
-import { BellIcon, CalendarIcon, FilterIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { CreditCardIcon, FilterIcon, PlusIcon, SearchIcon } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import PageTransition from "@/components/layout/PageTransition";
 import ReminderCard from "@/components/reminders/ReminderCard";
+import { ReminderForm } from "@/components/reminders/ReminderForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/common/Card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Mock data for demo
 const remindersMockData = [
   {
     id: "1",
     title: "Credit Card Bill",
-    amount: 1250.00,
-    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+    amount: 350.50,
+    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
     category: "credit-card" as const,
     paid: false,
     recurring: true,
@@ -24,19 +31,19 @@ const remindersMockData = [
   },
   {
     id: "2",
-    title: "Netflix Subscription",
-    amount: 15.99,
-    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
-    category: "subscription" as const,
+    title: "Rent Payment",
+    amount: 1200.00,
+    dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+    category: "rent" as const,
     paid: false,
     recurring: true,
     priority: "medium" as const,
   },
   {
     id: "3",
-    title: "Home Loan EMI",
-    amount: 1875.50,
-    dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
+    title: "Car EMI",
+    amount: 450.75,
+    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     category: "emi" as const,
     paid: false,
     recurring: true,
@@ -44,49 +51,30 @@ const remindersMockData = [
   },
   {
     id: "4",
-    title: "Utility Bill",
-    amount: 85.75,
-    dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days from now
+    title: "Internet Bill",
+    amount: 59.99,
+    dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
     category: "utility" as const,
     paid: false,
     recurring: true,
-    priority: "medium" as const,
+    priority: "low" as const,
   },
   {
     id: "5",
-    title: "Apartment Rent",
-    amount: 2100.00,
-    dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000), // 20 days from now
-    category: "rent" as const,
-    paid: false,
-    recurring: true,
-    priority: "high" as const,
-  },
-  {
-    id: "6",
-    title: "Car Insurance",
-    amount: 105.50,
-    dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago (overdue)
-    category: "other" as const,
-    paid: false,
-    recurring: true,
-    priority: "high" as const,
-  },
-  {
-    id: "7",
-    title: "Spotify Premium",
-    amount: 9.99,
-    dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago (paid)
-    category: "subscription" as const,
+    title: "Electricity Bill",
+    amount: 85.50,
+    dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    category: "utility" as const,
     paid: true,
     recurring: true,
-    priority: "low" as const,
+    priority: "medium" as const,
   },
 ];
 
 export default function Reminders() {
   const [reminders, setReminders] = useState(remindersMockData);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
   
   const handleMarkPaid = (id: string) => {
     setReminders(reminders.map(reminder => 
@@ -113,6 +101,22 @@ export default function Reminders() {
         reminder.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
   };
+
+  const handleAddReminder = (values: any) => {
+    const newReminder = {
+      id: `${reminders.length + 1}`,
+      title: values.title,
+      amount: values.amount,
+      dueDate: values.dueDate,
+      category: values.category,
+      paid: false,
+      recurring: values.recurring,
+      priority: values.priority,
+    };
+    
+    setReminders([newReminder, ...reminders]);
+    setShowAddModal(false);
+  };
   
   return (
     <PageTransition>
@@ -120,29 +124,41 @@ export default function Reminders() {
       <main className="page-container animate-fadeIn">
         <div className="page-header flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="page-title">Payment Reminders</h1>
-            <p className="text-muted-foreground">Manage all your recurring payments and due dates</p>
+            <h1 className="page-title">Bill & Payment Reminders</h1>
+            <p className="text-muted-foreground">Never miss a payment again with smart reminders</p>
           </div>
           
-          <Button className="space-x-2">
+          <Button className="space-x-2" onClick={() => setShowAddModal(true)}>
             <PlusIcon className="h-4 w-4" />
             <span>Add Reminder</span>
           </Button>
         </div>
         
         <Card className="mb-8">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input 
-                  placeholder="Search reminders..." 
-                  className="pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          <CardContent className="p-6">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground">Pending Reminders</span>
+                  <span className="text-3xl font-semibold">{filteredReminders(false).length}</span>
+                </div>
+                <div className="h-12 w-px bg-border"></div>
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground">Total Due Amount</span>
+                  <span className="text-3xl font-semibold">${filteredReminders(false).reduce((sum, reminder) => sum + reminder.amount, 0).toFixed(2)}</span>
+                </div>
               </div>
-              <div className="flex gap-4">
+              
+              <div className="flex items-center gap-4 w-full lg:w-auto">
+                <div className="relative flex-1">
+                  <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input 
+                    placeholder="Search reminders..." 
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="space-x-2">
@@ -153,26 +169,20 @@ export default function Reminders() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem>All Reminders</DropdownMenuItem>
                     <DropdownMenuItem>High Priority</DropdownMenuItem>
-                    <DropdownMenuItem>Upcoming Due</DropdownMenuItem>
-                    <DropdownMenuItem>Overdue</DropdownMenuItem>
-                    <DropdownMenuItem>Credit Cards</DropdownMenuItem>
-                    <DropdownMenuItem>Subscriptions</DropdownMenuItem>
+                    <DropdownMenuItem>Medium Priority</DropdownMenuItem>
+                    <DropdownMenuItem>Low Priority</DropdownMenuItem>
+                    <DropdownMenuItem>Due Soon</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                
-                <Button variant="outline" className="space-x-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  <span>By Date</span>
-                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Tabs defaultValue="upcoming" className="mb-8">
+        <Tabs defaultValue="pending" className="mb-8">
           <TabsList>
-            <TabsTrigger value="upcoming" className="relative">
-              Upcoming
+            <TabsTrigger value="pending" className="relative">
+              Pending
               {filteredReminders(false).length > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
                   {filteredReminders(false).length}
@@ -183,13 +193,13 @@ export default function Reminders() {
             <TabsTrigger value="all">All Reminders</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="upcoming" className="mt-6">
+          <TabsContent value="pending" className="mt-6">
             {filteredReminders(false).length === 0 ? (
               <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                <BellIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No upcoming reminders</h3>
-                <p className="text-muted-foreground mb-6">You're all caught up! Add a new reminder to stay on track.</p>
-                <Button>
+                <CreditCardIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No pending reminders</h3>
+                <p className="text-muted-foreground mb-6">You're all caught up! Add a new reminder to stay on top of upcoming bills.</p>
+                <Button onClick={() => setShowAddModal(true)}>
                   <PlusIcon className="h-4 w-4 mr-2" />
                   Add Reminder
                 </Button>
@@ -211,9 +221,9 @@ export default function Reminders() {
           <TabsContent value="paid" className="mt-6">
             {filteredReminders(true).length === 0 ? (
               <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                <BellIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <CreditCardIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">No paid reminders</h3>
-                <p className="text-muted-foreground">Paid reminders will appear here once you mark them as paid.</p>
+                <p className="text-muted-foreground">Paid reminders will appear here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -221,8 +231,6 @@ export default function Reminders() {
                   <ReminderCard
                     key={reminder.id}
                     {...reminder}
-                    onMarkPaid={handleMarkPaid}
-                    onSnooze={handleSnooze}
                   />
                 ))}
               </div>
@@ -240,13 +248,25 @@ export default function Reminders() {
                   <ReminderCard
                     key={reminder.id}
                     {...reminder}
-                    onMarkPaid={handleMarkPaid}
-                    onSnooze={handleSnooze}
+                    onMarkPaid={!reminder.paid ? handleMarkPaid : undefined}
+                    onSnooze={!reminder.paid ? handleSnooze : undefined}
                   />
                 ))}
             </div>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add New Reminder</DialogTitle>
+            </DialogHeader>
+            <ReminderForm 
+              onSubmit={handleAddReminder}
+              onCancel={() => setShowAddModal(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </main>
     </PageTransition>
   );

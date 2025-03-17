@@ -1,94 +1,109 @@
 
 import { useState } from "react";
-import { CalendarIcon, CreditCardIcon, FilterIcon, LineChartIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { CreditCardIcon, FilterIcon, MoreVerticalIcon, PlusIcon, SearchIcon } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import PageTransition from "@/components/layout/PageTransition";
-import ExpenseChart from "@/components/dashboard/ExpenseChart";
+import { ExpenseForm } from "@/components/expenses/ExpenseForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/common/Card";
+import { Card, CardContent } from "@/components/common/Card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-// Mock data for demo
-const expenseChartData = [
-  { name: "Jan", amount: 2500 },
-  { name: "Feb", amount: 3200 },
-  { name: "Mar", amount: 2800 },
-  { name: "Apr", amount: 3100 },
-  { name: "May", amount: 2900 },
-  { name: "Jun", amount: 3500 },
+// Mock categories with icons and colors
+const categories = [
+  { id: "food", name: "Food & Dining", color: "bg-orange-500", percent: 35 },
+  { id: "transportation", name: "Transportation", color: "bg-blue-500", percent: 15 },
+  { id: "entertainment", name: "Entertainment", color: "bg-purple-500", percent: 20 },
+  { id: "utilities", name: "Utilities", color: "bg-yellow-500", percent: 10 },
+  { id: "shopping", name: "Shopping", color: "bg-pink-500", percent: 12 },
+  { id: "other", name: "Other", color: "bg-gray-500", percent: 8 },
 ];
 
+// Mock expense data
 const expensesMockData = [
-  {
+  { 
     id: "1",
-    description: "Grocery Shopping",
-    amount: 125.75,
-    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    category: "Food",
+    title: "Grocery Shopping",
+    amount: 78.35,
+    date: new Date(2023, 6, 15),
+    category: "food",
+    paymentMethod: "credit_card",
   },
-  {
+  { 
     id: "2",
-    description: "Netflix Subscription",
-    amount: 15.99,
-    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    category: "Entertainment",
+    title: "Movie Tickets",
+    amount: 24.99,
+    date: new Date(2023, 6, 18),
+    category: "entertainment",
+    paymentMethod: "debit_card",
   },
-  {
+  { 
     id: "3",
-    description: "Gas Station",
+    title: "Gas",
     amount: 45.50,
-    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    category: "Transportation",
+    date: new Date(2023, 6, 20),
+    category: "transportation",
+    paymentMethod: "credit_card",
   },
-  {
+  { 
     id: "4",
-    description: "Lunch with colleagues",
-    amount: 32.40,
-    date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-    category: "Food",
+    title: "Electric Bill",
+    amount: 110.25,
+    date: new Date(2023, 6, 22),
+    category: "utilities",
+    paymentMethod: "bank_transfer",
   },
-  {
+  { 
     id: "5",
-    description: "Electric Bill",
-    amount: 95.20,
-    date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    category: "Utilities",
-  },
-  {
-    id: "6",
-    description: "Shopping Mall",
-    amount: 210.15,
-    date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-    category: "Shopping",
-  },
-  {
-    id: "7",
-    description: "Dinner with friends",
-    amount: 78.90,
-    date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
-    category: "Food",
+    title: "New Shoes",
+    amount: 89.99,
+    date: new Date(2023, 6, 25),
+    category: "shopping",
+    paymentMethod: "credit_card",
   },
 ];
-
-const categoryColors: Record<string, string> = {
-  Food: "bg-blue-500",
-  Entertainment: "bg-purple-500",
-  Transportation: "bg-orange-500",
-  Utilities: "bg-green-500",
-  Shopping: "bg-red-500",
-  Other: "bg-gray-500",
-};
 
 export default function Expenses() {
+  const [expenses, setExpenses] = useState(expensesMockData);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  const filteredExpenses = expensesMockData.filter(expense => 
-    searchQuery === "" || 
-    expense.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    expense.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const filteredExpenses = expenses.filter(expense => {
+    const matchesSearch = searchQuery === "" || 
+      expense.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = activeCategory === "all" || expense.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const totalSpent = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  const handleAddExpense = (values: any) => {
+    const newExpense = {
+      id: `${expenses.length + 1}`,
+      title: values.title,
+      amount: values.amount,
+      date: values.date,
+      category: values.category,
+      paymentMethod: values.paymentMethod,
+      notes: values.notes,
+    };
+    
+    setExpenses([newExpense, ...expenses]);
+    setShowAddModal(false);
+  };
+
+  const getCategoryColor = (categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId);
+    return category?.color || "bg-gray-500";
+  };
   
   return (
     <PageTransition>
@@ -97,28 +112,40 @@ export default function Expenses() {
         <div className="page-header flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="page-title">Expense Tracker</h1>
-            <p className="text-muted-foreground">Track and analyze your spending patterns</p>
+            <p className="text-muted-foreground">Track your spending habits and manage your budget</p>
           </div>
           
-          <Button className="space-x-2">
+          <Button className="space-x-2" onClick={() => setShowAddModal(true)}>
             <PlusIcon className="h-4 w-4" />
             <span>Add Expense</span>
           </Button>
         </div>
         
         <Card className="mb-8">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input 
-                  placeholder="Search expenses..." 
-                  className="pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          <CardContent className="p-6">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground">Total Expenses</span>
+                  <span className="text-3xl font-semibold">${totalSpent.toFixed(2)}</span>
+                </div>
+                <div className="h-12 w-px bg-border"></div>
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground">This Month</span>
+                  <span className="text-3xl font-semibold">${totalSpent.toFixed(2)}</span>
+                </div>
               </div>
-              <div className="flex gap-4">
+              
+              <div className="flex items-center gap-4 w-full lg:w-auto">
+                <div className="relative flex-1">
+                  <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input 
+                    placeholder="Search expenses..." 
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="space-x-2">
@@ -127,225 +154,140 @@ export default function Expenses() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>All Categories</DropdownMenuItem>
-                    <DropdownMenuItem>Food</DropdownMenuItem>
-                    <DropdownMenuItem>Entertainment</DropdownMenuItem>
-                    <DropdownMenuItem>Transportation</DropdownMenuItem>
-                    <DropdownMenuItem>Utilities</DropdownMenuItem>
-                    <DropdownMenuItem>Shopping</DropdownMenuItem>
+                    <DropdownMenuItem>All Time</DropdownMenuItem>
+                    <DropdownMenuItem>This Month</DropdownMenuItem>
+                    <DropdownMenuItem>Last Month</DropdownMenuItem>
+                    <DropdownMenuItem>Last 3 Months</DropdownMenuItem>
+                    <DropdownMenuItem>Custom Range</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                
-                <Button variant="outline" className="space-x-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  <span>By Date</span>
-                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <ExpenseChart data={expenseChartData} />
-          </div>
-          
-          <Card>
-            <CardHeader>
-              <h3 className="text-lg font-medium">Expense Categories</h3>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full bg-blue-500 mr-2`}></div>
-                    <span>Food</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium">$237.05</span>
-                    <span className="text-muted-foreground ml-2 text-sm">(35%)</span>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full bg-purple-500 mr-2`}></div>
-                    <span>Entertainment</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium">$15.99</span>
-                    <span className="text-muted-foreground ml-2 text-sm">(2%)</span>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full bg-orange-500 mr-2`}></div>
-                    <span>Transportation</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium">$45.50</span>
-                    <span className="text-muted-foreground ml-2 text-sm">(7%)</span>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full bg-green-500 mr-2`}></div>
-                    <span>Utilities</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium">$95.20</span>
-                    <span className="text-muted-foreground ml-2 text-sm">(14%)</span>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full bg-red-500 mr-2`}></div>
-                    <span>Shopping</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium">$210.15</span>
-                    <span className="text-muted-foreground ml-2 text-sm">(32%)</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <Tabs defaultValue="recent" className="mb-8">
-          <TabsList>
-            <TabsTrigger value="recent">Recent Expenses</TabsTrigger>
-            <TabsTrigger value="month">This Month</TabsTrigger>
-            <TabsTrigger value="all">All Expenses</TabsTrigger>
+        <Tabs defaultValue="all" className="mb-8" onValueChange={setActiveCategory}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="all">All</TabsTrigger>
+            {categories.map((category) => (
+              <TabsTrigger key={category.id} value={category.id}>
+                {category.name}
+              </TabsTrigger>
+            ))}
           </TabsList>
           
-          <TabsContent value="recent" className="mt-6">
-            <Card>
-              <CardContent className="p-0">
-                <div className="overflow-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-4 px-6 font-medium">Description</th>
-                        <th className="text-left py-4 px-6 font-medium">Category</th>
-                        <th className="text-left py-4 px-6 font-medium">Date</th>
-                        <th className="text-right py-4 px-6 font-medium">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredExpenses.map((expense) => (
-                        <tr key={expense.id} className="border-b hover:bg-muted/30 transition-colors">
-                          <td className="py-4 px-6">{expense.description}</td>
-                          <td className="py-4 px-6">
-                            <div className="flex items-center">
-                              <div className={`w-2 h-2 rounded-full ${categoryColors[expense.category] || "bg-gray-500"} mr-2`}></div>
-                              {expense.category}
-                            </div>
-                          </td>
-                          <td className="py-4 px-6">{expense.date.toLocaleDateString()}</td>
-                          <td className="py-4 px-6 text-right font-medium">${expense.amount.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="month" className="mt-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-medium">June 2023</h3>
-                  <div className="flex items-center">
-                    <LineChartIcon className="h-5 w-5 text-muted-foreground mr-2" />
-                    <span className="text-lg font-semibold">Total: $603.89</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Last Week</h4>
-                    <div className="space-y-3">
-                      {filteredExpenses.slice(0, 3).map((expense) => (
-                        <div key={expense.id} className="flex items-center justify-between py-2 border-b">
-                          <div className="flex items-center">
-                            <div className={`w-8 h-8 rounded-full ${categoryColors[expense.category] || "bg-gray-500"} flex items-center justify-center text-white mr-3`}>
-                              {expense.category.charAt(0)}
-                            </div>
-                            <div>
-                              <p className="font-medium">{expense.description}</p>
-                              <p className="text-sm text-muted-foreground">{expense.date.toLocaleDateString()}</p>
-                            </div>
-                          </div>
-                          <p className="font-semibold">${expense.amount.toFixed(2)}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Previous Week</h4>
-                    <div className="space-y-3">
-                      {filteredExpenses.slice(3, 7).map((expense) => (
-                        <div key={expense.id} className="flex items-center justify-between py-2 border-b">
-                          <div className="flex items-center">
-                            <div className={`w-8 h-8 rounded-full ${categoryColors[expense.category] || "bg-gray-500"} flex items-center justify-center text-white mr-3`}>
-                              {expense.category.charAt(0)}
-                            </div>
-                            <div>
-                              <p className="font-medium">{expense.description}</p>
-                              <p className="text-sm text-muted-foreground">{expense.date.toLocaleDateString()}</p>
-                            </div>
-                          </div>
-                          <p className="font-semibold">${expense.amount.toFixed(2)}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
           <TabsContent value="all" className="mt-6">
-            <Card>
-              <CardContent className="p-0">
-                <div className="overflow-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-4 px-6 font-medium">Description</th>
-                        <th className="text-left py-4 px-6 font-medium">Category</th>
-                        <th className="text-left py-4 px-6 font-medium">Date</th>
-                        <th className="text-right py-4 px-6 font-medium">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredExpenses.map((expense) => (
-                        <tr key={expense.id} className="border-b hover:bg-muted/30 transition-colors">
-                          <td className="py-4 px-6">{expense.description}</td>
-                          <td className="py-4 px-6">
-                            <div className="flex items-center">
-                              <div className={`w-2 h-2 rounded-full ${categoryColors[expense.category] || "bg-gray-500"} mr-2`}></div>
-                              {expense.category}
-                            </div>
-                          </td>
-                          <td className="py-4 px-6">{expense.date.toLocaleDateString()}</td>
-                          <td className="py-4 px-6 text-right font-medium">${expense.amount.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+            {filteredExpenses.length === 0 ? (
+              <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+                <CreditCardIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No expenses found</h3>
+                <p className="text-muted-foreground mb-6">Add your first expense to start tracking your spending.</p>
+                <Button onClick={() => setShowAddModal(true)}>
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Add Expense
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredExpenses.map((expense) => (
+                  <Card key={expense.id} className="overflow-hidden">
+                    <div className="flex items-center p-4">
+                      <div className={`w-2 self-stretch ${getCategoryColor(expense.category)}`}></div>
+                      <div className="flex-1 ml-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium">{expense.title}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {expense.date.toLocaleDateString()} • {categories.find(c => c.id === expense.category)?.name}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-lg font-semibold">${expense.amount.toFixed(2)}</span>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVerticalIcon className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>Edit</DropdownMenuItem>
+                                <DropdownMenuItem>Delete</DropdownMenuItem>
+                                <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
+          
+          {categories.map((category) => (
+            <TabsContent key={category.id} value={category.id} className="mt-6">
+              {filteredExpenses.length === 0 ? (
+                <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+                  <CreditCardIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No {category.name} expenses</h3>
+                  <p className="text-muted-foreground mb-6">Add your first {category.name.toLowerCase()} expense.</p>
+                  <Button onClick={() => setShowAddModal(true)}>
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Add Expense
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredExpenses.map((expense) => (
+                    <Card key={expense.id} className="overflow-hidden">
+                      <div className="flex items-center p-4">
+                        <div className={`w-2 self-stretch ${getCategoryColor(expense.category)}`}></div>
+                        <div className="flex-1 ml-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium">{expense.title}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {expense.date.toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <span className="text-lg font-semibold">${expense.amount.toFixed(2)}</span>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVerticalIcon className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem>Edit</DropdownMenuItem>
+                                  <DropdownMenuItem>Delete</DropdownMenuItem>
+                                  <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          ))}
         </Tabs>
+
+        <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add New Expense</DialogTitle>
+            </DialogHeader>
+            <ExpenseForm 
+              onSubmit={handleAddExpense}
+              onCancel={() => setShowAddModal(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </main>
     </PageTransition>
   );

@@ -16,7 +16,7 @@ export function useSubscriptions() {
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
-        .order('nextBillingDate', { ascending: true });
+        .order('next_billing_date', { ascending: true });
       
       if (error) {
         console.error('Error fetching subscriptions:', error);
@@ -30,8 +30,17 @@ export function useSubscriptions() {
       
       return data.map(subscription => ({
         ...subscription,
-        startDate: new Date(subscription.startDate),
-        nextBillingDate: new Date(subscription.nextBillingDate),
+        id: subscription.id,
+        name: subscription.name,
+        amount: subscription.amount,
+        billingCycle: subscription.billing_cycle,
+        category: subscription.category,
+        startDate: new Date(subscription.start_date),
+        nextBillingDate: new Date(subscription.next_billing_date),
+        website: subscription.website,
+        active: subscription.active,
+        userId: subscription.user_id,
+        createdAt: subscription.created_at,
       }));
     },
   });
@@ -43,9 +52,16 @@ export function useSubscriptions() {
       const { data, error } = await supabase
         .from('subscriptions')
         .insert([{
-          ...newSubscription,
+          name: newSubscription.name,
+          amount: newSubscription.amount,
+          billing_cycle: newSubscription.billingCycle,
+          category: newSubscription.category,
+          start_date: new Date().toISOString(),
+          next_billing_date: newSubscription.nextBillingDate,
+          website: newSubscription.website,
           active: true,
-          createdAt: new Date().toISOString(),
+          user_id: supabase.auth.getUser().then(({ data }) => data.user?.id),
+          created_at: new Date().toISOString(),
         }])
         .select();
       
@@ -108,20 +124,20 @@ export function useSubscriptions() {
       .filter(sub => sub.active)
       .reduce((total, sub) => {
         // Normalize all subscriptions to monthly cost
-        let monthlyCost = sub.amount;
+        let monthlyCost = Number(sub.amount);
         
         switch (sub.billingCycle) {
           case 'weekly': 
-            monthlyCost = sub.amount * 4.33; // Average weeks in a month
+            monthlyCost = Number(sub.amount) * 4.33; // Average weeks in a month
             break;
           case 'yearly':
-            monthlyCost = sub.amount / 12;
+            monthlyCost = Number(sub.amount) / 12;
             break;
           case 'quarterly':
-            monthlyCost = sub.amount / 3;
+            monthlyCost = Number(sub.amount) / 3;
             break;
           case 'biannually':
-            monthlyCost = sub.amount / 6;
+            monthlyCost = Number(sub.amount) / 6;
             break;
         }
         

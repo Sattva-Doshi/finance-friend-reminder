@@ -9,7 +9,147 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          payment_method: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          payment_method: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      reminders: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          due_date: string
+          id: string
+          paid: boolean | null
+          priority: string
+          recurring: boolean | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          due_date: string
+          id?: string
+          paid?: boolean | null
+          priority: string
+          recurring?: boolean | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          paid?: boolean | null
+          priority?: string
+          recurring?: boolean | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          active: boolean | null
+          amount: number
+          billing_cycle: string
+          category: string
+          created_at: string
+          id: string
+          name: string
+          next_billing_date: string
+          start_date: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          amount: number
+          billing_cycle: string
+          category: string
+          created_at?: string
+          id?: string
+          name: string
+          next_billing_date: string
+          start_date: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          amount?: number
+          billing_cycle?: string
+          category?: string
+          created_at?: string
+          id?: string
+          name?: string
+          next_billing_date?: string
+          start_date?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

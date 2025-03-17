@@ -1,11 +1,5 @@
 
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase public anon key - safe to use in browser
-const supabaseUrl = 'https://YOUR_SUPABASE_URL.supabase.co';
-const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/integrations/supabase/client';
 
 export type ReminderType = {
   id?: string;
@@ -45,3 +39,5 @@ export type SubscriptionType = {
   userId?: string;
   createdAt?: Date | string;
 };
+
+export { supabase };

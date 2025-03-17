@@ -16,7 +16,7 @@ export function useReminders() {
       const { data, error } = await supabase
         .from('reminders')
         .select('*')
-        .order('dueDate', { ascending: true });
+        .order('due_date', { ascending: true });
       
       if (error) {
         console.error('Error fetching reminders:', error);
@@ -30,7 +30,16 @@ export function useReminders() {
       
       return data.map(reminder => ({
         ...reminder,
-        dueDate: new Date(reminder.dueDate),
+        id: reminder.id,
+        title: reminder.title,
+        amount: reminder.amount,
+        dueDate: new Date(reminder.due_date),
+        category: reminder.category,
+        recurring: reminder.recurring,
+        priority: reminder.priority,
+        paid: reminder.paid,
+        userId: reminder.user_id,
+        createdAt: reminder.created_at,
       }));
     },
   });
@@ -42,9 +51,15 @@ export function useReminders() {
       const { data, error } = await supabase
         .from('reminders')
         .insert([{
-          ...newReminder,
-          createdAt: new Date().toISOString(),
+          title: newReminder.title,
+          amount: newReminder.amount,
+          due_date: newReminder.dueDate,
+          category: newReminder.category,
+          recurring: newReminder.recurring,
+          priority: newReminder.priority,
           paid: false,
+          user_id: supabase.auth.getUser().then(({ data }) => data.user?.id),
+          created_at: new Date().toISOString(),
         }])
         .select();
       
@@ -112,7 +127,7 @@ export function useReminders() {
       
       const { data, error } = await supabase
         .from('reminders')
-        .update({ dueDate: newDueDate.toISOString() })
+        .update({ due_date: newDueDate.toISOString() })
         .eq('id', reminderId)
         .select();
       

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, ReminderType } from '@/lib/supabase';
@@ -48,34 +49,44 @@ export function useReminders() {
     mutationFn: async (newReminder: ReminderType) => {
       setIsLoading(true);
       
-      // First, get the current user ID
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        throw new Error('User not authenticated');
-      }
-      
-      const { data, error } = await supabase
-        .from('reminders')
-        .insert({
-          title: newReminder.title,
-          amount: newReminder.amount,
-          due_date: newReminder.dueDate instanceof Date ? newReminder.dueDate.toISOString() : newReminder.dueDate,
-          category: newReminder.category,
-          recurring: newReminder.recurring,
-          priority: newReminder.priority,
-          paid: false,
-          user_id: userData.user.id,
-          created_at: new Date().toISOString(),
-        })
-        .select();
-      
-      if (error) {
-        console.error('Error adding reminder:', error);
+      try {
+        // First, get the current user ID
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) {
+          throw new Error('User not authenticated');
+        }
+        
+        console.log('Submitting reminder:', {
+          ...newReminder,
+          dueDate: newReminder.dueDate instanceof Date ? newReminder.dueDate.toISOString() : newReminder.dueDate
+        });
+        
+        const { data, error } = await supabase
+          .from('reminders')
+          .insert({
+            title: newReminder.title,
+            amount: newReminder.amount,
+            due_date: newReminder.dueDate instanceof Date ? newReminder.dueDate.toISOString() : newReminder.dueDate,
+            category: newReminder.category,
+            recurring: newReminder.recurring,
+            priority: newReminder.priority,
+            paid: false,
+            user_id: userData.user.id,
+            created_at: new Date().toISOString(),
+          })
+          .select();
+        
+        if (error) {
+          console.error('Error adding reminder:', error);
+          throw error;
+        }
+        
+        setIsLoading(false);
+        return data[0];
+      } catch (error) {
+        setIsLoading(false);
         throw error;
       }
-      
-      setIsLoading(false);
-      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reminders'] });

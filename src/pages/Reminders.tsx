@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { PlusIcon, ArrowUpDownIcon, FilterIcon, SearchIcon } from "lucide-react";
+import { PlusIcon, FilterIcon, SearchIcon } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import PageTransition from "@/components/layout/PageTransition";
 import ReminderCard from "@/components/reminders/ReminderCard";
@@ -14,6 +13,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { useReminders } from "@/hooks/use-reminders";
 import { ReminderType } from "@/lib/supabase";
@@ -40,10 +40,12 @@ export default function Reminders() {
   });
 
   const handleAddReminder = (values: any) => {
+    console.log("Adding reminder with values:", values);
+    
     const newReminder: ReminderType = {
       title: values.title,
       amount: values.amount,
-      dueDate: values.dueDate.toISOString(),
+      dueDate: values.dueDate,
       category: values.category,
       recurring: values.recurring,
       priority: values.priority,
@@ -152,7 +154,6 @@ export default function Reminders() {
           </TabsContent>
           
           <TabsContent value="paid" className="mt-6">
-            {/* Similar content for paid reminders */}
             {isLoading ? (
               <div className="flex justify-center p-12">
                 <span>Loading reminders...</span>
@@ -184,7 +185,6 @@ export default function Reminders() {
           </TabsContent>
           
           <TabsContent value="all" className="mt-6">
-            {/* Similar content for all reminders */}
             {isLoading ? (
               <div className="flex justify-center p-12">
                 <span>Loading reminders...</span>
@@ -224,6 +224,9 @@ export default function Reminders() {
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Add New Reminder</DialogTitle>
+              <DialogDescription>
+                Create a new payment reminder to track upcoming bills.
+              </DialogDescription>
             </DialogHeader>
             <ReminderForm 
               onSubmit={handleAddReminder}

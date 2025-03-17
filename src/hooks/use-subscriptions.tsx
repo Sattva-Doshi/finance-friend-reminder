@@ -49,20 +49,29 @@ export function useSubscriptions() {
   const addSubscriptionMutation = useMutation({
     mutationFn: async (newSubscription: SubscriptionType) => {
       setIsLoading(true);
+      
+      // First, get the current user ID
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('User not authenticated');
+      }
+      
       const { data, error } = await supabase
         .from('subscriptions')
-        .insert([{
+        .insert({
           name: newSubscription.name,
           amount: newSubscription.amount,
           billing_cycle: newSubscription.billingCycle,
           category: newSubscription.category,
           start_date: new Date().toISOString(),
-          next_billing_date: newSubscription.nextBillingDate,
+          next_billing_date: newSubscription.nextBillingDate instanceof Date 
+            ? newSubscription.nextBillingDate.toISOString() 
+            : newSubscription.nextBillingDate,
           website: newSubscription.website,
           active: true,
-          user_id: supabase.auth.getUser().then(({ data }) => data.user?.id),
+          user_id: userData.user.id,
           created_at: new Date().toISOString(),
-        }])
+        })
         .select();
       
       if (error) {

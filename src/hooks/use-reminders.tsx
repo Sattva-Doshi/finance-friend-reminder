@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, ReminderType } from '@/lib/supabase';
@@ -48,19 +47,26 @@ export function useReminders() {
   const addReminderMutation = useMutation({
     mutationFn: async (newReminder: ReminderType) => {
       setIsLoading(true);
+      
+      // First, get the current user ID
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('User not authenticated');
+      }
+      
       const { data, error } = await supabase
         .from('reminders')
-        .insert([{
+        .insert({
           title: newReminder.title,
           amount: newReminder.amount,
-          due_date: newReminder.dueDate,
+          due_date: newReminder.dueDate instanceof Date ? newReminder.dueDate.toISOString() : newReminder.dueDate,
           category: newReminder.category,
           recurring: newReminder.recurring,
           priority: newReminder.priority,
           paid: false,
-          user_id: supabase.auth.getUser().then(({ data }) => data.user?.id),
+          user_id: userData.user.id,
           created_at: new Date().toISOString(),
-        }])
+        })
         .select();
       
       if (error) {

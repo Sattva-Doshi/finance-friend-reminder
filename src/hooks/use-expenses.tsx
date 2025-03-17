@@ -47,18 +47,25 @@ export function useExpenses() {
   const addExpenseMutation = useMutation({
     mutationFn: async (newExpense: ExpenseType) => {
       setIsLoading(true);
+      
+      // First, get the current user ID
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('User not authenticated');
+      }
+      
       const { data, error } = await supabase
         .from('expenses')
-        .insert([{
+        .insert({
           title: newExpense.title,
           amount: newExpense.amount,
-          date: newExpense.date,
+          date: newExpense.date instanceof Date ? newExpense.date.toISOString() : newExpense.date,
           category: newExpense.category,
           payment_method: newExpense.paymentMethod,
           notes: newExpense.notes,
-          user_id: supabase.auth.getUser().then(({ data }) => data.user?.id),
+          user_id: userData.user.id,
           created_at: new Date().toISOString(),
-        }])
+        })
         .select();
       
       if (error) {

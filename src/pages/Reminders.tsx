@@ -10,6 +10,7 @@ import ReminderCard from '@/components/reminders/ReminderCard';
 import { ReminderForm } from '@/components/reminders/ReminderForm';
 import { useReminders } from '@/hooks/use-reminders';
 import { useAuth } from '@/hooks/use-auth';
+import { ReminderType } from '@/lib/supabase';
 
 export default function Reminders() {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -103,8 +104,18 @@ export default function Reminders() {
               <DialogTitle>Add New Reminder</DialogTitle>
             </DialogHeader>
             <ReminderForm
-              onSubmit={(data) => {
-                addReminder(data);
+              onSubmit={(formData) => {
+                // Ensure all required fields are present before passing to addReminder
+                const reminderData: ReminderType = {
+                  title: formData.title,
+                  amount: formData.amount,
+                  dueDate: formData.dueDate,
+                  category: formData.category,
+                  recurring: formData.recurring,
+                  priority: formData.priority,
+                  paid: false
+                };
+                addReminder(reminderData);
                 setShowAddDialog(false);
               }}
               onCancel={() => setShowAddDialog(false)}

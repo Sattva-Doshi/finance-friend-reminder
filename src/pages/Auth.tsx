@@ -11,11 +11,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
 import PageTransition from '@/components/layout/PageTransition';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [showConfirmationAlert, setShowConfirmationAlert] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
@@ -44,7 +48,13 @@ export default function Auth() {
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        if (error.message === "Email not confirmed" || error.code === "email_not_confirmed") {
+          setShowConfirmationAlert(true);
+          throw new Error("Please check your email and confirm your account before logging in");
+        }
+        throw error;
+      }
       
       toast({
         title: "Success",
@@ -94,6 +104,7 @@ export default function Auth() {
       
       if (error) throw error;
       
+      setShowConfirmationAlert(true);
       toast({
         title: "Success",
         description: "Registration successful! Check your email to confirm your account.",
@@ -107,6 +118,41 @@ export default function Auth() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setResendLoading(true);
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email sent",
+        description: "A new confirmation email has been sent to your address",
+      });
+    } catch (error: any) {
+      console.error('Resend confirmation error:', error);
+      toast({
+        title: "Failed to resend confirmation",
+        description: error.message || "An error occurred while resending the confirmation email",
+        variant: "destructive",
+      });
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -126,6 +172,25 @@ export default function Auth() {
                 Login or create an account to continue
               </CardDescription>
             </CardHeader>
+            
+            {showConfirmationAlert && (
+              <div className="px-6 mb-4">
+                <Alert variant="default" className="bg-amber-50 border-amber-200">
+                  <Info className="h-4 w-4 text-amber-500" />
+                  <AlertDescription className="text-amber-800">
+                    Please check your email inbox and spam folder for a confirmation link. 
+                    <Button 
+                      variant="link" 
+                      className="text-amber-600 p-0 h-auto font-semibold ml-1"
+                      onClick={handleResendConfirmation}
+                      disabled={resendLoading}
+                    >
+                      {resendLoading ? 'Sending...' : 'Resend confirmation email'}
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
             
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">

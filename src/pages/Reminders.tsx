@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import PageTransition from '@/components/layout/PageTransition';
 import Navbar from '@/components/layout/Navbar';
 import ReminderCard from '@/components/reminders/ReminderCard';
-import ReminderForm from '@/components/reminders/ReminderForm';
+import { ReminderForm } from '@/components/reminders/ReminderForm';
 import { useReminders } from '@/hooks/use-reminders';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -58,8 +58,15 @@ export default function Reminders() {
                   {upcomingReminders.map((reminder) => (
                     <ReminderCard
                       key={reminder.id}
-                      reminder={reminder}
-                      onMarkAsPaid={() => markReminderPaid(reminder.id!)}
+                      id={reminder.id!}
+                      title={reminder.title}
+                      amount={reminder.amount}
+                      dueDate={reminder.dueDate}
+                      category={reminder.category as any}
+                      paid={reminder.paid}
+                      recurring={reminder.recurring}
+                      priority={reminder.priority as any}
+                      onMarkPaid={() => markReminderPaid(reminder.id!)}
                       onSnooze={() => snoozeReminder(reminder.id!)}
                     />
                   ))}
@@ -74,8 +81,14 @@ export default function Reminders() {
                   {paidReminders.map((reminder) => (
                     <ReminderCard
                       key={reminder.id}
-                      reminder={reminder}
-                      isPaid
+                      id={reminder.id!}
+                      title={reminder.title}
+                      amount={reminder.amount}
+                      dueDate={reminder.dueDate}
+                      category={reminder.category as any}
+                      paid={reminder.paid}
+                      recurring={reminder.recurring}
+                      priority={reminder.priority as any}
                     />
                   ))}
                 </div>

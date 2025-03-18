@@ -1,10 +1,12 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { BellIcon, CalendarIcon, CreditCardIcon, HomeIcon, LayoutDashboardIcon, LineChartIcon, Menu, UsersIcon } from "lucide-react";
+import { BellIcon, CalendarIcon, CreditCardIcon, HomeIcon, LayoutDashboardIcon, LineChartIcon, LogOutIcon, Menu, UserIcon, UsersIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: HomeIcon },
@@ -16,6 +18,24 @@ const navItems = [
 export default function Navbar() {
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Success",
+        description: "You have been logged out successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred while logging out",
+        variant: "destructive",
+      });
+    }
+  };
   
   const NavLinks = () => (
     <>
@@ -35,6 +55,31 @@ export default function Navbar() {
           <span>{item.name}</span>
         </Link>
       ))}
+      
+      {!user ? (
+        <Link 
+          to="/auth"
+          className={cn(
+            "flex items-center gap-2 px-3 py-2 rounded-lg transition-all",
+            "hover:bg-secondary",
+            location.pathname === "/auth" 
+              ? "bg-primary/5 text-primary font-medium" 
+              : "text-foreground/70"
+          )}
+        >
+          <UserIcon className="w-5 h-5" />
+          <span>Login</span>
+        </Link>
+      ) : (
+        <Button 
+          variant="ghost" 
+          className="flex items-center justify-start gap-2 px-3 py-2 h-auto font-normal text-foreground/70 hover:bg-secondary hover:text-foreground"
+          onClick={handleSignOut}
+        >
+          <LogOutIcon className="w-5 h-5" />
+          <span>Logout</span>
+        </Button>
+      )}
     </>
   );
   

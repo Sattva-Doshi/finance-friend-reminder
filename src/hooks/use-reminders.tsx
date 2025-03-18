@@ -3,43 +3,19 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, ReminderType } from '@/lib/supabase';
 import { useToast } from './use-toast';
+import { useAuth } from './use-auth';
 
 export function useReminders() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // Check authentication status when the component mounts
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
-      setUserId(data.session?.user?.id || null);
-    };
-
-    checkAuth();
-
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        setIsAuthenticated(!!session);
-        setUserId(session?.user?.id || null);
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
+  const { user, isLoading: authLoading } = useAuth();
 
   // Fetch all reminders
   const { data: reminders = [] } = useQuery({
-    queryKey: ['reminders'],
+    queryKey: ['reminders', user?.id],
     queryFn: async () => {
-      if (!isAuthenticated || !userId) {
+      if (!user) {
         console.log('User not authenticated, returning empty reminders list');
         return [];
       }
@@ -73,7 +49,7 @@ export function useReminders() {
         createdAt: reminder.created_at,
       }));
     },
-    enabled: isAuthenticated && !!userId,
+    enabled: !!user && !authLoading,
   });
 
   // Add new reminder
@@ -82,7 +58,7 @@ export function useReminders() {
       setIsLoading(true);
       
       try {
-        if (!isAuthenticated || !userId) {
+        if (!user) {
           console.error('Cannot add reminder: User not authenticated');
           throw new Error('User not authenticated');
         }
@@ -102,7 +78,7 @@ export function useReminders() {
             recurring: newReminder.recurring,
             priority: newReminder.priority,
             paid: false,
-            user_id: userId,
+            user_id: user.id,
             created_at: new Date().toISOString(),
           })
           .select();
@@ -120,7 +96,7 @@ export function useReminders() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      queryClient.invalidateQueries({ queryKey: ['reminders', user?.id] });
       toast({
         title: 'Success',
         description: 'Reminder added successfully',
@@ -139,7 +115,7 @@ export function useReminders() {
   // Mark reminder as paid
   const markReminderPaidMutation = useMutation({
     mutationFn: async (reminderId: string) => {
-      if (!isAuthenticated || !userId) {
+      if (!user) {
         throw new Error('User not authenticated');
       }
 
@@ -157,7 +133,7 @@ export function useReminders() {
       return data[0];
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      queryClient.invalidateQueries({ queryKey: ['reminders', user?.id] });
     },
     onError: (error: any) => {
       toast({
@@ -171,7 +147,7 @@ export function useReminders() {
   // Snooze reminder (update dueDate to +1 day)
   const snoozeReminderMutation = useMutation({
     mutationFn: async (reminderId: string) => {
-      if (!isAuthenticated || !userId) {
+      if (!user) {
         throw new Error('User not authenticated');
       }
 
@@ -195,7 +171,7 @@ export function useReminders() {
       return data[0];
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      queryClient.invalidateQueries({ queryKey: ['reminders', user?.id] });
     },
     onError: (error: any) => {
       toast({
@@ -208,8 +184,8 @@ export function useReminders() {
 
   return {
     reminders,
-    isLoading,
-    isAuthenticated,
+    isLoading: isLoading || authLoading,
+    isAuthenticated: !!user,
     addReminder: addReminderMutation.mutate,
     markReminderPaid: markReminderPaidMutation.mutate,
     snoozeReminder: snoozeReminderMutation.mutate,

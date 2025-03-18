@@ -1,5 +1,7 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { PlusIcon, FilterIcon, SearchIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import PageTransition from "@/components/layout/PageTransition";
 import ReminderCard from "@/components/reminders/ReminderCard";
@@ -17,13 +19,29 @@ import {
 } from "@/components/ui/dialog";
 import { useReminders } from "@/hooks/use-reminders";
 import { ReminderType } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Reminders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState("upcoming");
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const { reminders, addReminder, markReminderPaid, snoozeReminder, isLoading } = useReminders();
+  const { reminders, addReminder, markReminderPaid, snoozeReminder, isLoading, isAuthenticated } = useReminders();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to view and manage your reminders",
+        variant: "destructive",
+      });
+      // Uncomment the line below when you have an authentication page
+      // navigate("/login");
+    }
+  }, [isAuthenticated, navigate, toast]);
 
   // Filter reminders based on search query and status
   const filteredReminders = reminders.filter(reminder => {
@@ -55,6 +73,24 @@ export default function Reminders() {
     addReminder(newReminder);
     setShowAddModal(false);
   };
+
+  // Show authentication message if not authenticated
+  if (isAuthenticated === false) {
+    return (
+      <PageTransition>
+        <Navbar />
+        <main className="page-container animate-fadeIn">
+          <div className="text-center py-12">
+            <h1 className="page-title mb-4">Authentication Required</h1>
+            <p className="text-muted-foreground mb-6">Please log in to view and manage your reminders.</p>
+            <Button onClick={() => { /* Add navigation to login page */ }}>
+              Log in
+            </Button>
+          </div>
+        </main>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, ReminderType } from '@/lib/supabase';
 import { useToast } from './use-toast';
@@ -8,11 +8,42 @@ export function useReminders() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Check authentication status when the component mounts
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsAuthenticated(!!data.session);
+      setUserId(data.session?.user?.id || null);
+    };
+
+    checkAuth();
+
+    // Subscribe to auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        setIsAuthenticated(!!session);
+        setUserId(session?.user?.id || null);
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   // Fetch all reminders
   const { data: reminders = [] } = useQuery({
     queryKey: ['reminders'],
     queryFn: async () => {
+      if (!isAuthenticated || !userId) {
+        console.log('User not authenticated, returning empty reminders list');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('reminders')
         .select('*')
@@ -42,6 +73,7 @@ export function useReminders() {
         createdAt: reminder.created_at,
       }));
     },
+    enabled: isAuthenticated && !!userId,
   });
 
   // Add new reminder
@@ -50,9 +82,8 @@ export function useReminders() {
       setIsLoading(true);
       
       try {
-        // First, get the current user ID
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData.user) {
+        if (!isAuthenticated || !userId) {
+          console.error('Cannot add reminder: User not authenticated');
           throw new Error('User not authenticated');
         }
         
@@ -71,7 +102,7 @@ export function useReminders() {
             recurring: newReminder.recurring,
             priority: newReminder.priority,
             paid: false,
-            user_id: userData.user.id,
+            user_id: userId,
             created_at: new Date().toISOString(),
           })
           .select();
@@ -108,6 +139,10 @@ export function useReminders() {
   // Mark reminder as paid
   const markReminderPaidMutation = useMutation({
     mutationFn: async (reminderId: string) => {
+      if (!isAuthenticated || !userId) {
+        throw new Error('User not authenticated');
+      }
+
       const { data, error } = await supabase
         .from('reminders')
         .update({ paid: true })
@@ -136,6 +171,10 @@ export function useReminders() {
   // Snooze reminder (update dueDate to +1 day)
   const snoozeReminderMutation = useMutation({
     mutationFn: async (reminderId: string) => {
+      if (!isAuthenticated || !userId) {
+        throw new Error('User not authenticated');
+      }
+
       const reminder = reminders.find(r => r.id === reminderId);
       if (!reminder) throw new Error('Reminder not found');
       
@@ -170,6 +209,7 @@ export function useReminders() {
   return {
     reminders,
     isLoading,
+    isAuthenticated,
     addReminder: addReminderMutation.mutate,
     markReminderPaid: markReminderPaidMutation.mutate,
     snoozeReminder: snoozeReminderMutation.mutate,

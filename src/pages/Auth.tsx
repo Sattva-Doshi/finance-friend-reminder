@@ -8,14 +8,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
 import PageTransition from '@/components/layout/PageTransition';
-import { FacebookIcon, InfoIcon, GithubIcon } from 'lucide-react';
+import { FacebookIcon, InfoIcon, GithubIcon, Mail } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// Form validation schema
+const authSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+});
+
+type AuthFormValues = z.infer<typeof authSchema>;
 
 export default function Auth() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize react-hook-form
+  const form = useForm<AuthFormValues>({
+    resolver: zodResolver(authSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
   useEffect(() => {
     // If we're already authenticated, redirect to home
@@ -28,6 +52,76 @@ export default function Auth() {
   if (user && !isLoading) {
     return <Navigate to="/" />;
   }
+
+  const handleSignIn = async (values: AuthFormValues) => {
+    try {
+      setIsSubmitting(true);
+      setAuthError(null);
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in",
+      });
+      
+      navigate('/');
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      setAuthError(error.message);
+      
+      toast({
+        title: "Sign in failed",
+        description: error.message || "An error occurred during sign in",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSignUp = async (values: AuthFormValues) => {
+    try {
+      setIsSubmitting(true);
+      setAuthError(null);
+      
+      const { error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          // Skip email verification
+          data: {
+            email_confirmed: true,
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Account created",
+        description: "You can now sign in with your new account",
+      });
+      
+    } catch (error: any) {
+      console.error('Sign up error:', error);
+      setAuthError(error.message);
+      
+      toast({
+        title: "Sign up failed",
+        description: error.message || "An error occurred during sign up",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     try {
@@ -100,6 +194,122 @@ export default function Auth() {
                 </Alert>
               )}
               
+              <Tabs defaultValue="signin" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="signin">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="signin" className="space-y-4">
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleSignIn)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="your.email@example.com" 
+                                type="email"
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="••••••••" 
+                                type="password"
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? "Signing in..." : "Sign In"}
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+                
+                <TabsContent value="signup" className="space-y-4">
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="your.email@example.com" 
+                                type="email"
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="••••••••" 
+                                type="password"
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? "Creating account..." : "Create Account"}
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+              </Tabs>
+              
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
+              
               <Button 
                 variant="outline" 
                 onClick={handleGoogleLogin}
@@ -121,7 +331,7 @@ export default function Auth() {
 
             <CardFooter className="justify-center">
               <p className="text-xs text-center text-muted-foreground">
-                Note: You need to configure the Google and Facebook providers in Supabase for these options to work.
+                By signing in, you agree to our Terms of Service and Privacy Policy.
               </p>
             </CardFooter>
           </Card>

@@ -1,4 +1,5 @@
-
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import PageTransition from "@/components/layout/PageTransition";
 import { OverviewCard } from "@/components/dashboard/OverviewCard";
@@ -10,14 +11,15 @@ import { CreditCardIcon, ArrowRightIcon, BellIcon, CalendarIcon, DollarSignIcon,
 import { useReminders } from "@/hooks/use-reminders";
 import { useExpenses } from "@/hooks/use-expenses";
 import { useSubscriptions } from "@/hooks/use-subscriptions";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Index() {
   const navigate = useNavigate();
   const { reminders, markReminderPaid, snoozeReminder } = useReminders();
   const { expenses, getMonthlyExpenseData } = useExpenses();
   const { subscriptions, cancelSubscription, getTotalMonthlyCost } = useSubscriptions();
-  
+  const { user, isLoading } = useAuth(true);
+
   // Get upcoming reminders (not paid and due within 7 days)
   const upcomingReminders = reminders
     .filter(reminder => !reminder.paid)
@@ -49,6 +51,14 @@ export default function Index() {
   const upcomingDueAmount = reminders
     .filter(reminder => !reminder.paid)
     .reduce((total, reminder) => total + reminder.amount, 0);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <PageTransition>

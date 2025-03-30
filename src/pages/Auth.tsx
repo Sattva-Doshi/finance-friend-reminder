@@ -1,158 +1,63 @@
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
 import PageTransition from '@/components/layout/PageTransition';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { FacebookIcon, GithubIcon } from 'lucide-react';
 
 export default function Auth() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [showConfirmationAlert, setShowConfirmationAlert] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
 
-  // If we're already authenticated, redirect to home
+  useEffect(() => {
+    // If we're already authenticated, redirect to home
+    if (user && !isLoading) {
+      navigate('/');
+    }
+  }, [user, isLoading, navigate]);
+
+  // If we're already authenticated, don't render the auth page
   if (user && !isLoading) {
     return <Navigate to="/" />;
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+  const handleGoogleLogin = async () => {
     try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
       });
       
-      if (error) {
-        if (error.message === "Email not confirmed" || error.code === "email_not_confirmed") {
-          setShowConfirmationAlert(true);
-          throw new Error("Please check your email and confirm your account before logging in");
-        }
-        throw error;
-      }
-      
-      toast({
-        title: "Success",
-        description: "You have been logged in successfully",
-      });
-      
-      navigate('/');
+      if (error) throw error;
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('Google login error:', error);
       toast({
         title: "Login failed",
-        description: error.message || "An error occurred during login",
+        description: error.message || "An error occurred during Google login",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+  const handleFacebookLogin = async () => {
     try {
-      setLoading(true);
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
       });
       
       if (error) throw error;
-      
-      setShowConfirmationAlert(true);
-      toast({
-        title: "Success",
-        description: "Registration successful! Check your email to confirm your account.",
-      });
     } catch (error: any) {
-      console.error('Signup error:', error);
+      console.error('Facebook login error:', error);
       toast({
-        title: "Signup failed",
-        description: error.message || "An error occurred during signup",
+        title: "Login failed",
+        description: error.message || "An error occurred during Facebook login",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendConfirmation = async () => {
-    if (!email) {
-      toast({
-        title: "Error",
-        description: "Please enter your email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setResendLoading(true);
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Email sent",
-        description: "A new confirmation email has been sent to your address",
-      });
-    } catch (error: any) {
-      console.error('Resend confirmation error:', error);
-      toast({
-        title: "Failed to resend confirmation",
-        description: error.message || "An error occurred while resending the confirmation email",
-        variant: "destructive",
-      });
-    } finally {
-      setResendLoading(false);
     }
   };
 
@@ -169,104 +74,29 @@ export default function Auth() {
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-bold text-center">Welcome</CardTitle>
               <CardDescription className="text-center">
-                Login or create an account to continue
+                Login to continue to your dashboard
               </CardDescription>
             </CardHeader>
             
-            {showConfirmationAlert && (
-              <div className="px-6 mb-4">
-                <Alert variant="default" className="bg-amber-50 border-amber-200">
-                  <Info className="h-4 w-4 text-amber-500" />
-                  <AlertDescription className="text-amber-800">
-                    Please check your email inbox and spam folder for a confirmation link. 
-                    <Button 
-                      variant="link" 
-                      className="text-amber-600 p-0 h-auto font-semibold ml-1"
-                      onClick={handleResendConfirmation}
-                      disabled={resendLoading}
-                    >
-                      {resendLoading ? 'Sending...' : 'Resend confirmation email'}
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              </div>
-            )}
-            
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
+            <CardContent className="space-y-4">
+              <Button 
+                variant="outline" 
+                onClick={handleGoogleLogin}
+                className="w-full py-6 space-x-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-google"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"></path><path d="m15.5 8.5-3.5 3.5-2-2L7.5 12.5"></path></svg>
+                <span>Sign in with Google</span>
+              </Button>
               
-              <TabsContent value="login">
-                <form onSubmit={handleLogin}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        placeholder="name@example.com" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input 
-                        id="password" 
-                        type="password" 
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? 'Logging in...' : 'Login'}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </TabsContent>
-              
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input 
-                        id="signup-email" 
-                        type="email" 
-                        placeholder="name@example.com" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <Input 
-                        id="signup-password" 
-                        type="password" 
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Password must be at least 6 characters long
-                      </p>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? 'Creating account...' : 'Create Account'}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </TabsContent>
-            </Tabs>
+              <Button 
+                variant="outline" 
+                onClick={handleFacebookLogin}
+                className="w-full py-6 space-x-2"
+              >
+                <FacebookIcon className="h-4 w-4" />
+                <span>Sign in with Facebook</span>
+              </Button>
+            </CardContent>
           </Card>
         </motion.div>
       </div>

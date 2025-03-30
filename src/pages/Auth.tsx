@@ -1,19 +1,21 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
 import PageTransition from '@/components/layout/PageTransition';
-import { FacebookIcon, GithubIcon } from 'lucide-react';
+import { FacebookIcon, InfoIcon, GithubIcon } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function Auth() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     // If we're already authenticated, redirect to home
@@ -29,6 +31,7 @@ export default function Auth() {
 
   const handleGoogleLogin = async () => {
     try {
+      setAuthError(null);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
       });
@@ -36,6 +39,11 @@ export default function Auth() {
       if (error) throw error;
     } catch (error: any) {
       console.error('Google login error:', error);
+      setAuthError(
+        error.message === 'Unsupported provider: provider is not enabled'
+          ? 'Google login is not enabled. Please configure Google provider in Supabase.'
+          : error.message || 'An error occurred during Google login'
+      );
       toast({
         title: "Login failed",
         description: error.message || "An error occurred during Google login",
@@ -46,6 +54,7 @@ export default function Auth() {
 
   const handleFacebookLogin = async () => {
     try {
+      setAuthError(null);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
       });
@@ -53,6 +62,11 @@ export default function Auth() {
       if (error) throw error;
     } catch (error: any) {
       console.error('Facebook login error:', error);
+      setAuthError(
+        error.message === 'Unsupported provider: provider is not enabled'
+          ? 'Facebook login is not enabled. Please configure Facebook provider in Supabase.'
+          : error.message || 'An error occurred during Facebook login'
+      );
       toast({
         title: "Login failed",
         description: error.message || "An error occurred during Facebook login",
@@ -79,6 +93,13 @@ export default function Auth() {
             </CardHeader>
             
             <CardContent className="space-y-4">
+              {authError && (
+                <Alert variant="destructive" className="mb-4">
+                  <InfoIcon className="h-4 w-4" />
+                  <AlertDescription>{authError}</AlertDescription>
+                </Alert>
+              )}
+              
               <Button 
                 variant="outline" 
                 onClick={handleGoogleLogin}
@@ -97,6 +118,12 @@ export default function Auth() {
                 <span>Sign in with Facebook</span>
               </Button>
             </CardContent>
+
+            <CardFooter className="justify-center">
+              <p className="text-xs text-center text-muted-foreground">
+                Note: You need to configure the Google and Facebook providers in Supabase for these options to work.
+              </p>
+            </CardFooter>
           </Card>
         </motion.div>
       </div>

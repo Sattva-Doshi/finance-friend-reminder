@@ -98,13 +98,15 @@ export default function Auth() {
       setAuthError(null);
       
       console.log('Signing up with:', values.email);
+      
+      // Sign up without email confirmation
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: window.location.origin,
+          // Skip email confirmation by setting data.email_confirmed
           data: {
-            email_confirmed: true,
+            email_confirmed: true
           }
         }
       });
@@ -128,8 +130,13 @@ export default function Auth() {
           console.error('Auto sign-in error:', signInError);
           toast({
             title: "Account created",
-            description: "Account created successfully. You can now sign in.",
+            description: "Account created successfully. Please sign in.",
           });
+          
+          // Reset form and switch to sign in tab (fixing the TypeScript error)
+          form.reset();
+          const signinTab = document.querySelector('[data-value="signin"]') as HTMLElement;
+          if (signinTab) signinTab.click();
         } else {
           await refetchSession();
           toast({
@@ -148,7 +155,8 @@ export default function Auth() {
       
       // Reset form and switch to sign in tab
       form.reset();
-      document.querySelector('[data-state="inactive"][data-value="signin"]')?.click();
+      const signinTab = document.querySelector('[data-value="signin"]') as HTMLElement;
+      if (signinTab) signinTab.click();
       
     } catch (error: any) {
       console.error('Sign up error details:', error);

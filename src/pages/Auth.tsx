@@ -28,7 +28,7 @@ type AuthFormValues = z.infer<typeof authSchema>;
 export default function Auth() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refetchSession } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -58,12 +58,19 @@ export default function Auth() {
       setIsSubmitting(true);
       setAuthError(null);
       
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Signing in with:', values.email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+      
+      console.log('Sign in successful:', data);
+      await refetchSession();
       
       toast({
         title: "Welcome back!",
@@ -72,12 +79,12 @@ export default function Auth() {
       
       navigate('/');
     } catch (error: any) {
-      console.error('Sign in error:', error);
-      setAuthError(error.message);
+      console.error('Sign in error details:', error);
+      setAuthError(error.message || "Invalid login credentials. Please check your email and password.");
       
       toast({
         title: "Sign in failed",
-        description: error.message || "An error occurred during sign in",
+        description: error.message || "Invalid login credentials. Please check your email and password.",
         variant: "destructive",
       });
     } finally {
@@ -90,34 +97,78 @@ export default function Auth() {
       setIsSubmitting(true);
       setAuthError(null);
       
-      const { error } = await supabase.auth.signUp({
+      console.log('Signing up with:', values.email);
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
           emailRedirectTo: window.location.origin,
-          // Skip email verification
           data: {
             email_confirmed: true,
           }
         }
       });
       
-      if (error) throw error;
+      console.log('Sign up response:', data);
+      
+      if (error) {
+        console.error('Sign up error:', error);
+        throw error;
+      }
+      
+      // After successful signup, try to sign in automatically
+      if (data && data.user) {
+        console.log('Auto sign-in after registration');
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: values.email,
+          password: values.password,
+        });
+        
+        if (signInError) {
+          console.error('Auto sign-in error:', signInError);
+          toast({
+            title: "Account created",
+            description: "Account created successfully. You can now sign in.",
+          });
+        } else {
+          await refetchSession();
+          toast({
+            title: "Account created",
+            description: "You have been automatically signed in.",
+          });
+          navigate('/');
+          return;
+        }
+      }
       
       toast({
         title: "Account created",
         description: "You can now sign in with your new account",
       });
       
-    } catch (error: any) {
-      console.error('Sign up error:', error);
-      setAuthError(error.message);
+      // Reset form and switch to sign in tab
+      form.reset();
+      document.querySelector('[data-state="inactive"][data-value="signin"]')?.click();
       
-      toast({
-        title: "Sign up failed",
-        description: error.message || "An error occurred during sign up",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      console.error('Sign up error details:', error);
+      
+      // Handle specific error cases
+      if (error.message.includes('User already registered')) {
+        setAuthError('This email is already registered. Please try signing in instead.');
+        toast({
+          title: "Sign up failed",
+          description: "This email is already registered. Please try signing in instead.",
+          variant: "destructive",
+        });
+      } else {
+        setAuthError(error.message || "An error occurred during sign up");
+        toast({
+          title: "Sign up failed",
+          description: error.message || "An error occurred during sign up",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -128,6 +179,9 @@ export default function Auth() {
       setAuthError(null);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
       });
       
       if (error) throw error;
@@ -151,6 +205,9 @@ export default function Auth() {
       setAuthError(null);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
+        options: {
+          redirectTo: window.location.origin
+        }
       });
       
       if (error) throw error;

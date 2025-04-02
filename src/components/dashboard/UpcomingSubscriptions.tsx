@@ -55,4 +55,4 @@ export const UpcomingSubscriptions: React.FC<UpcomingSubscriptionsProps> = ({
       </div>
     </div>
   );
-};
+}

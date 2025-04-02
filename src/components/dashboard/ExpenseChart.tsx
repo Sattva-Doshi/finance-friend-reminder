@@ -2,8 +2,6 @@
 import { Card, CardContent, CardHeader } from "@/components/common/Card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from "recharts";
 import { cn } from "@/lib/utils";
-import { IndianRupeeIcon } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ExpenseChartProps {
   data: Array<{
@@ -18,9 +16,8 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
     return (
       <div className="bg-background/95 border rounded-lg shadow-lg p-2 text-sm backdrop-blur-sm">
         <p className="font-medium">{label}</p>
-        <p className="text-primary flex items-center">
-          <IndianRupeeIcon className="h-3.5 w-3.5 mr-1" />
-          {payload[0].value?.toFixed(2)}
+        <p className="text-primary">
+          ${payload[0].value?.toFixed(2)}
         </p>
       </div>
     );
@@ -30,8 +27,6 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 export default function ExpenseChart({ data, className }: ExpenseChartProps) {
-  const isMobile = useIsMobile();
-  
   return (
     <Card className={cn("h-[400px]", className)}>
       <CardHeader>
@@ -56,16 +51,12 @@ export default function ExpenseChart({ data, className }: ExpenseChartProps) {
               tickLine={false}
               tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
               dy={10}
-              height={isMobile ? 40 : 30}
-              interval={isMobile ? 1 : 0}
-              angle={isMobile ? -45 : 0}
-              textAnchor={isMobile ? "end" : "middle"}
             />
             <YAxis 
               axisLine={false} 
               tickLine={false} 
               tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-              tickFormatter={(value) => `₹${value}`}
+              tickFormatter={(value) => `$${value}`}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }} />
             <Bar 

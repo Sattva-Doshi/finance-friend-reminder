@@ -1,5 +1,5 @@
 
-import { CalendarIcon, CheckCircle2Icon, CreditCardIcon, ExternalLinkIcon, InfoIcon, LaptopIcon, MoreVerticalIcon, MusicIcon, PanelTopIcon, ShoppingBagIcon, TvIcon, XIcon, ZapIcon, IndianRupeeIcon } from "lucide-react";
+import { CalendarIcon, CheckCircle2Icon, CreditCardIcon, ExternalLinkIcon, InfoIcon, LaptopIcon, MoreVerticalIcon, MusicIcon, PanelTopIcon, ShoppingBagIcon, TvIcon, XIcon, ZapIcon } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/common/Card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -141,10 +141,7 @@ export default function SubscriptionCard({
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-lg font-semibold flex items-center justify-end">
-                  <IndianRupeeIcon className="h-3.5 w-3.5 mr-1" />
-                  {amount.toFixed(2)}
-                </p>
+                <p className="text-lg font-semibold">${amount.toFixed(2)}</p>
                 <p className="text-xs text-muted-foreground">{formatBillingCycle(billingCycle)}</p>
               </div>
             </div>
@@ -194,10 +191,7 @@ export default function SubscriptionCard({
               </span>
               <span className="text-sm ml-2">{formatBillingCycle(billingCycle)}</span>
             </div>
-            <span className="text-2xl font-semibold flex items-center">
-              <IndianRupeeIcon className="h-4 w-4 mr-1" />
-              {amount.toFixed(2)}
-            </span>
+            <span className="text-2xl font-semibold">${amount.toFixed(2)}</span>
           </div>
           
           <div className="flex items-center justify-between text-sm">
@@ -210,9 +204,8 @@ export default function SubscriptionCard({
                 }
               </span>
             </div>
-            <span className="text-muted-foreground flex items-center">
-              <IndianRupeeIcon className="h-3 w-3 mr-0.5" />
-              {getMonthlyEquivalent(amount, billingCycle).toFixed(2)}/mo
+            <span className="text-muted-foreground">
+              ~${getMonthlyEquivalent(amount, billingCycle).toFixed(2)}/mo
             </span>
           </div>
         </CardContent>

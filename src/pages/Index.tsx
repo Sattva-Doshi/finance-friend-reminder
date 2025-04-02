@@ -12,7 +12,6 @@ import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { UpcomingReminders } from "@/components/dashboard/UpcomingReminders";
 import { RecentExpenses } from "@/components/dashboard/RecentExpenses";
 import { UpcomingSubscriptions } from "@/components/dashboard/UpcomingSubscriptions";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -20,7 +19,6 @@ export default function Index() {
   const { expenses, getMonthlyExpenseData } = useExpenses();
   const { subscriptions, cancelSubscription, getTotalMonthlyCost } = useSubscriptions();
   const { user, isLoading } = useAuth(true);
-  const isMobile = useIsMobile();
 
   // Get upcoming reminders (not paid and due within 7 days)
   const upcomingReminders = reminders
@@ -88,18 +86,17 @@ export default function Index() {
           upcomingDueAmount={upcomingDueAmount}
           monthlyExpensesAmount={monthlyExpensesAmount}
           totalSubscriptionCost={getTotalMonthlyCost()}
-          currencySymbol="₹"
         />
 
         {/* Main content grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left column: Chart */}
-          <div className={isMobile ? "order-2" : "lg:col-span-2"}>
+          <div className="lg:col-span-2">
             <ExpenseChart data={chartData} />
           </div>
 
           {/* Right column: Dashboard widgets */}
-          <div className={isMobile ? "order-1" : ""}>
+          <div>
             <UpcomingReminders 
               reminders={upcomingReminders}
               onMarkPaid={markReminderPaid}

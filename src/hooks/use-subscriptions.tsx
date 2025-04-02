@@ -34,7 +34,7 @@ export function useSubscriptions() {
         name: subscription.name,
         amount: subscription.amount,
         billingCycle: subscription.billing_cycle,
-        category: subscription.category || 'other',
+        category: subscription.category,
         startDate: new Date(subscription.start_date),
         nextBillingDate: new Date(subscription.next_billing_date),
         website: subscription.website,
@@ -62,7 +62,7 @@ export function useSubscriptions() {
           name: newSubscription.name,
           amount: newSubscription.amount,
           billing_cycle: newSubscription.billingCycle,
-          category: newSubscription.category || 'other',
+          category: newSubscription.category,
           start_date: new Date().toISOString(),
           next_billing_date: newSubscription.nextBillingDate instanceof Date 
             ? newSubscription.nextBillingDate.toISOString() 

@@ -35,9 +35,10 @@ import { toast } from "@/hooks/use-toast";
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   amount: z.coerce.number().positive({ message: "Amount must be positive" }),
-  billingCycle: z.enum(["weekly", "monthly", "yearly"]),
+  billingCycle: z.enum(["weekly", "monthly", "quarterly", "biannually", "yearly"]),
   nextBillingDate: z.date(),
-  url: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal("")),
+  category: z.string().default("other"),
+  website: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal("")),
   logo: z.string().optional(),
 });
 
@@ -56,17 +57,15 @@ export function SubscriptionForm({ onSubmit, onCancel }: SubscriptionFormProps) 
       amount: 0,
       billingCycle: "monthly",
       nextBillingDate: new Date(),
-      url: "",
+      category: "other",
+      website: "",
       logo: "",
     },
   });
 
   const handleSubmit = (values: FormValues) => {
+    console.log("Form submitted with values:", values);
     onSubmit(values);
-    toast({
-      title: "Subscription added",
-      description: `${values.name} has been added to your subscriptions.`,
-    });
   };
 
   return (
@@ -91,7 +90,7 @@ export function SubscriptionForm({ onSubmit, onCancel }: SubscriptionFormProps) 
           name="amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount ($)</FormLabel>
+              <FormLabel>Amount (₹)</FormLabel>
               <FormControl>
                 <Input type="number" step="0.01" {...field} />
               </FormControl>
@@ -115,7 +114,37 @@ export function SubscriptionForm({ onSubmit, onCancel }: SubscriptionFormProps) 
                 <SelectContent>
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="quarterly">Quarterly</SelectItem>
+                  <SelectItem value="biannually">Bi-annually</SelectItem>
                   <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value || "other"}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="entertainment">Entertainment</SelectItem>
+                  <SelectItem value="productivity">Productivity</SelectItem>
+                  <SelectItem value="utilities">Utilities</SelectItem>
+                  <SelectItem value="food">Food & Dining</SelectItem>
+                  <SelectItem value="health">Health & Fitness</SelectItem>
+                  <SelectItem value="music">Music</SelectItem>
+                  <SelectItem value="streaming">Streaming</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -164,7 +193,7 @@ export function SubscriptionForm({ onSubmit, onCancel }: SubscriptionFormProps) 
 
         <FormField
           control={form.control}
-          name="url"
+          name="website"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Website URL (optional)</FormLabel>

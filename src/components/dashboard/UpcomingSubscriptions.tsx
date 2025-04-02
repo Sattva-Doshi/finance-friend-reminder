@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RefreshCcwIcon, ArrowRightIcon, PlusIcon } from "lucide-react";
+import { RefreshCcwIcon, ArrowRightIcon, PlusIcon, IndianRupeeIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SubscriptionCard from "@/components/subscriptions/SubscriptionCard";
 import { SubscriptionType } from '@/lib/supabase';

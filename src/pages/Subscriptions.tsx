@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { CalendarIcon, CreditCardIcon, FilterIcon, PlusIcon, SearchIcon, IndianRupeeIcon } from "lucide-react";
+import { CalendarIcon, CreditCardIcon, FilterIcon, PlusIcon, SearchIcon } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import PageTransition from "@/components/layout/PageTransition";
 import SubscriptionCard from "@/components/subscriptions/SubscriptionCard";
@@ -20,7 +19,6 @@ import { useSubscriptions } from "@/hooks/use-subscriptions";
 import { SubscriptionType } from "@/lib/supabase";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Subscription categories with colors
 const categories = [
   { id: "entertainment", name: "Entertainment", color: "bg-purple-500" },
   { id: "productivity", name: "Productivity", color: "bg-blue-500" },
@@ -51,7 +49,6 @@ export default function Subscriptions() {
   const inactiveSubscriptions = filteredSubscriptions.filter(sub => !sub.active);
 
   const handleAddSubscription = (values: any) => {
-    // Create new subscription object
     const newSubscription: SubscriptionType = {
       name: values.name,
       amount: values.amount,
@@ -251,14 +248,18 @@ export default function Subscriptions() {
         </div>
 
         <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle>Add New Subscription</DialogTitle>
             </DialogHeader>
-            <SubscriptionForm 
-              onSubmit={handleAddSubscription}
-              onCancel={() => setShowAddModal(false)}
-            />
+            <ScrollArea className="flex-1 overflow-auto pr-4">
+              <div className="pb-2">
+                <SubscriptionForm 
+                  onSubmit={handleAddSubscription}
+                  onCancel={() => setShowAddModal(false)}
+                />
+              </div>
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       </main>

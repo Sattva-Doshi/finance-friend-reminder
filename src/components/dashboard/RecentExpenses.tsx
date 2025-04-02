@@ -42,7 +42,7 @@ export const RecentExpenses: React.FC<RecentExpensesProps> = ({
                   {new Date(expense.date).toLocaleDateString()}
                 </p>
               </div>
-              <span className="font-semibold">${expense.amount.toFixed(2)}</span>
+              <span className="font-semibold">₹{expense.amount.toFixed(2)}</span>
             </div>
           ))
         )}

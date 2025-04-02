@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/common/Card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -132,36 +133,21 @@ export default function Subscriptions() {
           </CardContent>
         </Card>
         
-        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="w-full">
           <Tabs defaultValue="all" className="mb-8" onValueChange={setActiveCategory}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="all">All</TabsTrigger>
-              {!isMobile && categories.map((category) => (
-                <TabsTrigger key={category.id} value={category.id}>
-                  {category.name}
-                </TabsTrigger>
-              ))}
-              {isMobile && (
-                <TabsTrigger value="categories">Categories</TabsTrigger>
-              )}
-              <TabsTrigger value="inactive">Inactive</TabsTrigger>
-            </TabsList>
-            
-            {isMobile && activeCategory === "categories" && (
-              <div className="flex flex-wrap gap-2 my-4">
-                {categories.map((category) => (
-                  <Button
-                    key={category.id}
-                    variant="outline"
-                    size="sm"
-                    className="mb-2"
-                    onClick={() => setActiveCategory(category.id)}
-                  >
-                    {category.name}
-                  </Button>
-                ))}
-              </div>
-            )}
+            <div className="w-full overflow-hidden">
+              <ScrollArea className="w-full pb-4" orientation="horizontal">
+                <TabsList className="mb-4 inline-flex w-max">
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  {categories.map((category) => (
+                    <TabsTrigger key={category.id} value={category.id}>
+                      {category.name}
+                    </TabsTrigger>
+                  ))}
+                  <TabsTrigger value="inactive">Inactive</TabsTrigger>
+                </TabsList>
+              </ScrollArea>
+            </div>
             
             <TabsContent value="all" className="mt-6">
               {isLoading ? (

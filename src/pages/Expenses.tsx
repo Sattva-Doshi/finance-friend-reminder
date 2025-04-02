@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/common/Card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { useExpenses } from "@/hooks/use-expenses";
 import { ExpenseType } from "@/lib/supabase";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Mock categories with icons and colors
 const categories = [
@@ -32,6 +34,7 @@ export default function Expenses() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
+  const isMobile = useIsMobile();
   
   const { expenses, addExpense, isLoading } = useExpenses();
 
@@ -85,13 +88,13 @@ export default function Expenses() {
               <div className="flex items-center gap-4">
                 <div className="flex flex-col">
                   <span className="text-sm text-muted-foreground">Total Expenses</span>
-                  <span className="text-3xl font-semibold">${totalSpent.toFixed(2)}</span>
+                  <span className="text-3xl font-semibold">₹{totalSpent.toFixed(2)}</span>
                 </div>
                 <div className="h-12 w-px bg-border"></div>
                 <div className="flex flex-col">
                   <span className="text-sm text-muted-foreground">This Month</span>
                   <span className="text-3xl font-semibold">
-                    ${expenses
+                    ₹{expenses
                       .filter(e => {
                         const now = new Date();
                         const expenseDate = new Date(e.date);
@@ -135,14 +138,18 @@ export default function Expenses() {
         </Card>
         
         <Tabs defaultValue="all" className="mb-8" onValueChange={setActiveCategory}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="all">All</TabsTrigger>
-            {categories.map((category) => (
-              <TabsTrigger key={category.id} value={category.id}>
-                {category.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="w-full overflow-hidden">
+            <ScrollArea className="w-full pb-4" orientation="horizontal">
+              <TabsList className="mb-4 inline-flex w-max">
+                <TabsTrigger value="all">All</TabsTrigger>
+                {categories.map((category) => (
+                  <TabsTrigger key={category.id} value={category.id}>
+                    {category.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </ScrollArea>
+          </div>
           
           <TabsContent value="all" className="mt-6">
             {isLoading ? (
@@ -174,7 +181,7 @@ export default function Expenses() {
                             </p>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className="text-lg font-semibold">${expense.amount.toFixed(2)}</span>
+                            <span className="text-lg font-semibold">₹{expense.amount.toFixed(2)}</span>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -228,7 +235,7 @@ export default function Expenses() {
                               </p>
                             </div>
                             <div className="flex items-center gap-4">
-                              <span className="text-lg font-semibold">${expense.amount.toFixed(2)}</span>
+                              <span className="text-lg font-semibold">₹{expense.amount.toFixed(2)}</span>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-8 w-8">

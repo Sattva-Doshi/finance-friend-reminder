@@ -1,10 +1,10 @@
-
-import { CalendarIcon, CheckCircle2Icon, Clock10Icon, CreditCardIcon, DollarSignIcon, HomeIcon, InfoIcon, RefreshCcwIcon, ZapIcon } from "lucide-react";
+import { CalendarIcon, CheckCircle2Icon, Clock10Icon, CreditCardIcon, DollarSignIcon, HomeIcon, InfoIcon, MailIcon, RefreshCcwIcon, ZapIcon } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/common/Card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { useNotifications } from "@/hooks/use-notifications";
 
 type ReminderCategory = 
   | "credit-card" 
@@ -29,12 +29,6 @@ interface ReminderCardProps {
   onSnooze?: (id: string) => void;
 }
 
-const priorityClasses = {
-  high: "border-l-4 border-l-destructive",
-  medium: "border-l-4 border-l-warning",
-  low: "border-l-4 border-l-success",
-};
-
 export default function ReminderCard({
   id,
   title,
@@ -48,6 +42,7 @@ export default function ReminderCard({
   onSnooze,
 }: ReminderCardProps) {
   const { toast } = useToast();
+  const { sendReminderEmail, isLoading } = useNotifications();
   
   const getCategoryIcon = () => {
     switch (category) {
@@ -105,6 +100,20 @@ export default function ReminderCard({
     }
   };
 
+  const handleSendEmail = () => {
+    sendReminderEmail({
+      id,
+      title,
+      amount,
+      dueDate
+    });
+    
+    toast({
+      title: "Email notification sent",
+      description: `A payment reminder for '${title}' has been sent to your email.`,
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -134,7 +143,7 @@ export default function ReminderCard({
         <CardContent className="py-2">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-2xl font-semibold">${amount.toFixed(2)}</p>
+              <p className="text-2xl font-semibold">₹{amount.toFixed(2)}</p>
               <div className="flex items-center mt-1">
                 <CalendarIcon className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
                 <span className={cn("text-sm", dueStatus.class)}>
@@ -156,7 +165,7 @@ export default function ReminderCard({
           </div>
         </CardContent>
         {!paid && (
-          <CardFooter className="pt-2 flex gap-2">
+          <CardFooter className="pt-2 flex flex-wrap gap-2">
             <Button className="flex-1" size="sm" onClick={handleMarkPaid}>
               <CheckCircle2Icon className="h-4 w-4 mr-2" />
               Mark Paid
@@ -169,9 +178,25 @@ export default function ReminderCard({
             >
               Snooze
             </Button>
+            <Button
+              className="flex-1 mt-2 w-full"
+              size="sm"
+              variant="secondary"
+              onClick={handleSendEmail}
+              disabled={isLoading}
+            >
+              <MailIcon className="h-4 w-4 mr-2" />
+              Email Reminder
+            </Button>
           </CardFooter>
         )}
       </Card>
     </motion.div>
   );
 }
+
+const priorityClasses = {
+  high: "border-l-4 border-l-destructive",
+  medium: "border-l-4 border-l-warning",
+  low: "border-l-4 border-l-success",
+};

@@ -1,14 +1,15 @@
 
-import { Card, CardContent, CardHeader } from "@/components/common/Card";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
 import React from "react";
+import { Card } from "@/components/common/Card";
 import { CompactCard } from "./card/CompactCard";
+import { CardAmount } from "./card/CardAmount";
 import { CardDetails } from "./card/CardDetails";
 import { CardMenu } from "./card/CardMenu";
 import { SubscriptionCardFooter } from "./card/CardFooter";
 import { SubscriptionCardProps } from "./types";
+import { Button } from "@/components/ui/button";
+import { MailIcon } from "lucide-react";
+import { useNotifications } from "@/hooks/use-notifications";
 
 export default function SubscriptionCard({
   id,
@@ -22,59 +23,41 @@ export default function SubscriptionCard({
   onCancel,
   compact = false,
 }: SubscriptionCardProps) {
-  const { toast } = useToast();
-  
-  const handleOpenWebsite = () => {
-    if (website) {
-      window.open(website.startsWith('http') ? website : `https://${website}`, '_blank');
-    }
-  };
+  const { sendSubscriptionEmail, isLoading } = useNotifications();
 
   const handleCancel = () => {
     if (onCancel) {
       onCancel(id);
-      toast({
-        title: "Subscription canceled",
-        description: `'${name}' has been canceled.`,
-      });
     }
   };
 
+  const handleSendEmail = () => {
+    sendSubscriptionEmail({
+      id,
+      name,
+      amount,
+      nextBillingDate
+    });
+  };
+
   if (compact) {
-    return (
-      <CompactCard
-        name={name}
-        amount={amount}
-        billingCycle={billingCycle}
-        nextBillingDate={nextBillingDate}
-        inactive={inactive}
-      />
-    );
+    return <CompactCard
+      name={name}
+      amount={amount}
+      billingCycle={billingCycle}
+      nextBillingDate={nextBillingDate}
+      inactive={inactive}
+    />;
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className={cn(
-        "overflow-hidden",
-        inactive && "opacity-60",
-      )}>
-        <CardHeader className="pb-2 relative">
-          <div className={cn(
-            "absolute inset-0 h-1",
-            inactive ? "bg-muted" : "bg-primary"
-          )} />
-          <div className="flex justify-between items-center pt-3">
-            <h3 className="font-medium text-base">{name}</h3>
-            {!inactive && (
-              <CardMenu onCancel={handleCancel} />
-            )}
+    <Card className="overflow-hidden">
+      <div className="flex items-start justify-between p-4">
+        <div className="flex-1">
+          <div className="flex justify-between items-start">
+            <h3 className="font-medium mr-2">{name}</h3>
+            {onCancel && <CardMenu onCancel={handleCancel} />}
           </div>
-        </CardHeader>
-        <CardContent className="py-3">
           <CardDetails
             billingCycle={billingCycle}
             category={category}
@@ -82,14 +65,28 @@ export default function SubscriptionCard({
             nextBillingDate={nextBillingDate}
             inactive={inactive}
           />
-        </CardContent>
-        
-        <SubscriptionCardFooter
-          website={website}
-          inactive={inactive}
-          onOpenWebsite={handleOpenWebsite}
-        />
-      </Card>
-    </motion.div>
+        </div>
+        <CardAmount amount={amount} billingCycle={billingCycle} />
+      </div>
+      
+      <div className="px-4 pb-4">
+        <Button
+          className="w-full"
+          size="sm"
+          variant="secondary"
+          onClick={handleSendEmail}
+          disabled={isLoading || inactive}
+        >
+          <MailIcon className="h-4 w-4 mr-2" />
+          Send Renewal Notification
+        </Button>
+      </div>
+      
+      <SubscriptionCardFooter
+        website={website}
+        inactive={inactive}
+        onOpenWebsite={() => window.open(website, "_blank")}
+      />
+    </Card>
   );
 }

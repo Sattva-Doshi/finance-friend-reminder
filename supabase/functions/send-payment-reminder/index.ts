@@ -1,13 +1,17 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Resend } from "npm:resend@1.0.0";
+import { SMTPClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SMTP_HOST = Deno.env.get("SMTP_HOST");
+const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "587");
+const SMTP_USERNAME = Deno.env.get("SMTP_USERNAME");
+const SMTP_PASSWORD = Deno.env.get("SMTP_PASSWORD");
+const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "notifications@fintrack.app";
 
 interface EmailRequestBody {
   userEmail: string;
@@ -26,10 +30,8 @@ serve(async (req) => {
   }
 
   try {
-    const resend = new Resend(RESEND_API_KEY);
-    
-    if (!RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is not configured");
+    if (!SMTP_HOST || !SMTP_USERNAME || !SMTP_PASSWORD) {
+      throw new Error("SMTP configuration is missing");
     }
 
     const body: EmailRequestBody = await req.json();
@@ -89,26 +91,37 @@ serve(async (req) => {
       `;
     }
 
+    // Configure SMTP client
+    const client = new SMTPClient({
+      connection: {
+        hostname: SMTP_HOST,
+        port: SMTP_PORT,
+        tls: true,
+        auth: {
+          username: SMTP_USERNAME,
+          password: SMTP_PASSWORD,
+        },
+      },
+    });
+
     // Send the email
-    const { data, error } = await resend.emails.send({
-      from: "FinTrack <notifications@fintrack.app>",
-      to: [userEmail],
+    const sendResult = await client.send({
+      from: FROM_EMAIL,
+      to: userEmail,
       subject: subject,
       html: emailContent,
     });
 
-    if (error) {
-      console.error("Email sending error:", error);
-      throw error;
-    }
+    // Close the connection
+    await client.close();
 
-    console.log("Email sent successfully:", data);
+    console.log("Email sent successfully:", sendResult);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: `Email notification sent to ${userEmail}`,
-        data 
+        data: sendResult 
       }),
       { 
         status: 200,

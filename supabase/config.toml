@@ -22,9 +22,5 @@ pool_mode = "transaction"
 default_pool_size = 15
 max_client_conn = 100
 
-[realtime]
-webhook_port = 54323
-server_port = 54324
-
 [studio]
 port = 54325

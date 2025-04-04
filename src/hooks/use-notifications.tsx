@@ -10,39 +10,6 @@ export function useNotifications() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Track email notification in the database
-  const trackNotification = async (
-    type: 'reminder' | 'subscription', 
-    id: string,
-    status: string = 'sent'
-  ) => {
-    if (!user) return null;
-
-    try {
-      const { data, error } = await supabase
-        .from('email_notifications')
-        .insert({
-          user_id: user.id,
-          reminder_id: type === 'reminder' ? id : null,
-          subscription_id: type === 'subscription' ? id : null,
-          notification_type: type,
-          status: status,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error tracking notification:', error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Failed to track notification:', error);
-      return null;
-    }
-  };
-
   // Send email notification for reminder
   const sendReminderEmailMutation = useMutation({
     mutationFn: async ({ 
@@ -71,19 +38,6 @@ export function useNotifications() {
           throw new Error('User email not found');
         }
 
-        // Get user preferences
-        const { data: preferences } = await supabase
-          .from('user_preferences')
-          .select('email_notifications')
-          .eq('id', user.id)
-          .single();
-
-        // Check if user has enabled email notifications
-        if (preferences && preferences.email_notifications === false) {
-          console.log('User has disabled email notifications');
-          return { skipped: true };
-        }
-
         // Send email notification using edge function
         const { data, error } = await supabase.functions.invoke('send-payment-reminder', {
           body: {
@@ -100,9 +54,6 @@ export function useNotifications() {
         if (error) {
           throw error;
         }
-
-        // Track the notification in the database
-        await trackNotification('reminder', id);
         
         return data;
       } finally {
@@ -154,19 +105,6 @@ export function useNotifications() {
           throw new Error('User email not found');
         }
 
-        // Get user preferences
-        const { data: preferences } = await supabase
-          .from('user_preferences')
-          .select('email_notifications')
-          .eq('id', user.id)
-          .single();
-
-        // Check if user has enabled email notifications
-        if (preferences && preferences.email_notifications === false) {
-          console.log('User has disabled email notifications');
-          return { skipped: true };
-        }
-
         // Send email notification using edge function
         const { data, error } = await supabase.functions.invoke('send-payment-reminder', {
           body: {
@@ -183,9 +121,6 @@ export function useNotifications() {
         if (error) {
           throw error;
         }
-
-        // Track the notification in the database
-        await trackNotification('subscription', id);
         
         return data;
       } finally {
@@ -209,40 +144,9 @@ export function useNotifications() {
     },
   });
 
-  // Get notification history for the current user
-  const getNotificationHistory = async () => {
-    if (!user) return [];
-
-    try {
-      const { data, error } = await supabase
-        .from('email_notifications')
-        .select(`
-          id,
-          notification_type,
-          sent_at,
-          status,
-          reminders(title, amount, due_date),
-          subscriptions(name, amount, next_billing_date)
-        `)
-        .eq('user_id', user.id)
-        .order('sent_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching notification history:', error);
-        throw error;
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Failed to get notification history:', error);
-      return [];
-    }
-  };
-
   return {
     isLoading,
     sendReminderEmail: sendReminderEmailMutation.mutate,
     sendSubscriptionEmail: sendSubscriptionEmailMutation.mutate,
-    getNotificationHistory,
   };
 }

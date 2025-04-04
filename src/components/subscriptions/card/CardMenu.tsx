@@ -3,11 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EditIcon, MoreVerticalIcon, Trash2Icon } from "lucide-react";
 import React from "react";
-
-interface CardMenuProps {
-  onCancel: () => void;
-  onEdit?: () => void;
-}
+import { CardMenuProps } from "../types";
 
 export const CardMenu = ({ onCancel, onEdit }: CardMenuProps) => {
   return (

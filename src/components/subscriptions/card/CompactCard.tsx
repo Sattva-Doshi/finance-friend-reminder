@@ -7,14 +7,7 @@ import React from "react";
 import { getTimeRemaining } from "../utils/billingUtils";
 import { CardAmount } from "./CardAmount";
 import { formatBillingCycle } from "../utils/billingUtils";
-
-interface CompactCardProps {
-  name: string;
-  amount: number;
-  billingCycle: string;
-  nextBillingDate: Date;
-  inactive?: boolean;
-}
+import { CompactCardProps } from "../types";
 
 export const CompactCard = ({
   name,

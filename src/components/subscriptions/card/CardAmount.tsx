@@ -1,12 +1,7 @@
 
 import { IndianRupeeIcon } from "lucide-react";
 import React from "react";
-
-interface CardAmountProps {
-  amount: number;
-  billingCycle: string;
-  compact?: boolean;
-}
+import { CardAmountProps } from "../types";
 
 export const CardAmount = ({ amount, billingCycle, compact = false }: CardAmountProps) => {
   if (compact) {

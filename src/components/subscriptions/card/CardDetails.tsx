@@ -3,14 +3,7 @@ import { CalendarIcon, IndianRupeeIcon } from "lucide-react";
 import React from "react";
 import { getCategoryIcon } from "../utils/categoryIcons";
 import { formatBillingCycle, getMonthlyEquivalent } from "../utils/billingUtils";
-
-interface CardDetailsProps {
-  billingCycle: string;
-  category: string;
-  amount: number;
-  nextBillingDate: Date;
-  inactive?: boolean;
-}
+import { CardDetailsProps } from "../types";
 
 export const CardDetails = ({
   billingCycle,

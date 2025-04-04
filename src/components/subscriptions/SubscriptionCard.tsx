@@ -8,19 +8,7 @@ import { CompactCard } from "./card/CompactCard";
 import { CardDetails } from "./card/CardDetails";
 import { CardMenu } from "./card/CardMenu";
 import { SubscriptionCardFooter } from "./card/CardFooter";
-
-interface SubscriptionCardProps {
-  id: string;
-  name: string;
-  amount: number;
-  billingCycle: string;
-  category: string;
-  nextBillingDate: Date;
-  website?: string;
-  inactive?: boolean;
-  onCancel?: (id: string) => void;
-  compact?: boolean;
-}
+import { SubscriptionCardProps } from "./types";
 
 export default function SubscriptionCard({
   id,

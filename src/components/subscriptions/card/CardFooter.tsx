@@ -3,12 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/common/Card";
 import { ExternalLinkIcon, XIcon } from "lucide-react";
 import React from "react";
-
-interface CardFooterProps {
-  website?: string;
-  inactive?: boolean;
-  onOpenWebsite?: () => void;
-}
+import { CardFooterProps } from "../types";
 
 export const SubscriptionCardFooter = ({ 
   website, 

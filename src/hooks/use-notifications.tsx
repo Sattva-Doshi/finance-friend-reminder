@@ -52,21 +52,23 @@ export function useNotifications() {
         });
 
         if (error) {
+          console.error('Error invoking send-payment-reminder:', error);
           throw error;
         }
         
         return data;
+      } catch (error: any) {
+        console.error('Error in sendReminderEmail:', error);
+        throw error;
       } finally {
         setIsLoading(false);
       }
     },
     onSuccess: (data) => {
-      if (data && !data.skipped) {
-        toast({
-          title: 'Reminder Email Sent',
-          description: 'The reminder notification was sent successfully.',
-        });
-      }
+      toast({
+        title: 'Reminder Email Sent',
+        description: 'The reminder notification was sent successfully.',
+      });
     },
     onError: (error: any) => {
       toast({
@@ -119,21 +121,23 @@ export function useNotifications() {
         });
 
         if (error) {
+          console.error('Error invoking send-payment-reminder:', error);
           throw error;
         }
         
         return data;
+      } catch (error: any) {
+        console.error('Error in sendSubscriptionEmail:', error);
+        throw error;
       } finally {
         setIsLoading(false);
       }
     },
     onSuccess: (data) => {
-      if (data && !data.skipped) {
-        toast({
-          title: 'Subscription Email Sent',
-          description: 'The subscription renewal notification was sent successfully.',
-        });
-      }
+      toast({
+        title: 'Subscription Email Sent',
+        description: 'The subscription renewal notification was sent successfully.',
+      });
     },
     onError: (error: any) => {
       toast({

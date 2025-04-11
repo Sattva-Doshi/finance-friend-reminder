@@ -7,10 +7,6 @@ schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
-[functions]
-[functions.send-payment-reminder]
-verify_jwt = true
-
 [db]
 port = 54322
 shadow_port = 54320
@@ -24,3 +20,7 @@ max_client_conn = 100
 
 [studio]
 port = 54325
+
+[functions]
+[functions.send-payment-reminder]
+verify_jwt = true

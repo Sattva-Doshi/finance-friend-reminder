@@ -103,6 +103,7 @@ export type Database = {
           file_type: string
           id: string
           subscription_id: string | null
+          title: string
           user_id: string
         }
         Insert: {
@@ -114,6 +115,7 @@ export type Database = {
           file_type: string
           id?: string
           subscription_id?: string | null
+          title: string
           user_id: string
         }
         Update: {
@@ -125,6 +127,7 @@ export type Database = {
           file_type?: string
           id?: string
           subscription_id?: string | null
+          title?: string
           user_id?: string
         }
         Relationships: [

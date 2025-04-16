@@ -95,6 +95,7 @@ export type Database = {
       }
       financial_documents: {
         Row: {
+          category: string
           created_at: string | null
           description: string | null
           file_name: string
@@ -105,6 +106,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category?: string
           created_at?: string | null
           description?: string | null
           file_name: string
@@ -115,6 +117,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category?: string
           created_at?: string | null
           description?: string | null
           file_name?: string

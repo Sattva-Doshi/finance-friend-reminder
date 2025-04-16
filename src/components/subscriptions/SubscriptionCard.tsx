@@ -7,9 +7,7 @@ import { CardDetails } from "./card/CardDetails";
 import { CardMenu } from "./card/CardMenu";
 import { SubscriptionCardFooter } from "./card/CardFooter";
 import { SubscriptionCardProps } from "./types";
-import { Button } from "@/components/ui/button";
-import { MailIcon } from "lucide-react";
-import { useNotifications } from "@/hooks/use-notifications";
+import { DocumentUpload } from "@/components/documents/DocumentUpload";
 
 export default function SubscriptionCard({
   id,
@@ -23,23 +21,6 @@ export default function SubscriptionCard({
   onCancel,
   compact = false,
 }: SubscriptionCardProps) {
-  const { sendSubscriptionEmail, isLoading } = useNotifications();
-
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel(id);
-    }
-  };
-
-  const handleSendEmail = () => {
-    sendSubscriptionEmail({
-      id,
-      name,
-      amount,
-      nextBillingDate
-    });
-  };
-
   if (compact) {
     return <CompactCard
       name={name}
@@ -68,19 +49,12 @@ export default function SubscriptionCard({
         </div>
         <CardAmount amount={amount} billingCycle={billingCycle} />
       </div>
-      
-      <div className="px-4 pb-4">
-        <Button
-          className="w-full"
-          size="sm"
-          variant="secondary"
-          onClick={handleSendEmail}
-          disabled={isLoading || inactive}
-        >
-          <MailIcon className="h-4 w-4 mr-2" />
-          Send Renewal Notification
-        </Button>
-      </div>
+
+      {!compact && !inactive && (
+        <div className="px-4 pb-4">
+          <DocumentUpload subscriptionId={id} />
+        </div>
+      )}
       
       <SubscriptionCardFooter
         website={website}

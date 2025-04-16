@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import PageTransition from "@/components/layout/PageTransition";
@@ -6,7 +7,7 @@ import { PlusIcon, FileIcon, Trash2Icon, DownloadIcon, FileTextIcon } from "luci
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { DocumentUpload } from "@/components/documents/DocumentUpload";
+import { DocumentUpload, DOCUMENT_CATEGORIES, type DocumentCategory } from "@/components/documents/DocumentUpload";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ interface Document {
   created_at: string;
   subscription_id: string | null;
   subscription_name?: string;
+  category: DocumentCategory;
 }
 
 export default function Documents() {

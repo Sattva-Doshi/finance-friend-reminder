@@ -59,7 +59,8 @@ export function DocumentUpload({ subscriptionId, onSuccess }: DocumentUploadProp
       
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).slice(2)}.${fileExt}`;
-      const filePath = `${selectedSubscription ? `subscriptions/${selectedSubscription}/` : ''}${fileName}`;
+      // Only include subscription path if it's not "none"
+      const filePath = `${selectedSubscription && selectedSubscription !== "none" ? `subscriptions/${selectedSubscription}/` : ''}${fileName}`;
 
       // Upload file to storage
       const { error: uploadError } = await supabase.storage
@@ -76,7 +77,8 @@ export function DocumentUpload({ subscriptionId, onSuccess }: DocumentUploadProp
           file_path: filePath,
           file_type: file.type,
           description,
-          subscription_id: selectedSubscription || null,
+          // Set subscription_id to null if "none" is selected
+          subscription_id: selectedSubscription && selectedSubscription !== "none" ? selectedSubscription : null,
           user_id: user.id,
         });
 
@@ -125,7 +127,7 @@ export function DocumentUpload({ subscriptionId, onSuccess }: DocumentUploadProp
               <SelectValue placeholder="Link to subscription (optional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">No subscription</SelectItem>
+              <SelectItem value="none">No subscription</SelectItem>
               {subscriptions.map((sub: any) => (
                 <SelectItem key={sub.id} value={sub.id}>
                   {sub.name}

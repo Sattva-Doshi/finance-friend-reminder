@@ -37,7 +37,7 @@ export default function SubscriptionCard({
         <div className="flex-1">
           <div className="flex justify-between items-start">
             <h3 className="font-medium mr-2">{name}</h3>
-            {onCancel && <CardMenu onCancel={handleCancel} />}
+            {onCancel && <CardMenu onCancel={() => onCancel(id)} />}
           </div>
           <CardDetails
             billingCycle={billingCycle}

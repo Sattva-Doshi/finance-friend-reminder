@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { FileIcon, Loader2Icon, UploadIcon } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 interface DocumentUploadProps {
   subscriptionId?: string;
@@ -16,6 +17,7 @@ export function DocumentUpload({ subscriptionId }: DocumentUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -24,7 +26,7 @@ export function DocumentUpload({ subscriptionId }: DocumentUploadProps) {
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !user) return;
     
     try {
       setIsUploading(true);
@@ -49,6 +51,7 @@ export function DocumentUpload({ subscriptionId }: DocumentUploadProps) {
           file_type: file.type,
           description,
           subscription_id: subscriptionId || null,
+          user_id: user.id,
         });
 
       if (dbError) throw dbError;
@@ -97,7 +100,7 @@ export function DocumentUpload({ subscriptionId }: DocumentUploadProps) {
 
       <Button 
         onClick={handleUpload} 
-        disabled={!file || isUploading}
+        disabled={!file || isUploading || !user}
         className="w-full"
       >
         {isUploading ? (

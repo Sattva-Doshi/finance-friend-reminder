@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import PageTransition from "@/components/layout/PageTransition";
@@ -32,6 +31,7 @@ export default function Documents() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | DocumentCategory>('all');
   const { user } = useAuth(true);
   const { toast } = useToast();
 
@@ -41,7 +41,6 @@ export default function Documents() {
     try {
       setIsLoading(true);
       
-      // Get documents with subscription details
       const { data, error } = await supabase
         .from('financial_documents')
         .select(`
@@ -52,7 +51,6 @@ export default function Documents() {
       
       if (error) throw error;
       
-      // Format documents data
       const formattedDocs = data.map((doc: any) => ({
         ...doc,
         subscription_name: doc.subscriptions?.name || null
@@ -79,14 +77,12 @@ export default function Documents() {
 
   const handleDelete = async (id: string, filePath: string) => {
     try {
-      // Delete file from storage
       const { error: storageError } = await supabase.storage
         .from('financial_docs')
         .remove([filePath]);
       
       if (storageError) throw storageError;
       
-      // Delete metadata from database
       const { error: dbError } = await supabase
         .from('financial_documents')
         .delete()
@@ -94,7 +90,6 @@ export default function Documents() {
       
       if (dbError) throw dbError;
       
-      // Update UI
       setDocuments(documents.filter(doc => doc.id !== id));
       
       toast({
@@ -118,7 +113,6 @@ export default function Documents() {
       
       if (error) throw error;
       
-      // Create download link
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
@@ -126,7 +120,6 @@ export default function Documents() {
       document.body.appendChild(a);
       a.click();
       
-      // Clean up
       URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error: any) {
@@ -147,10 +140,9 @@ export default function Documents() {
     return <FileIcon className="h-8 w-8 text-gray-500" />;
   };
 
-  // Filter documents by category
-  const allDocuments = documents;
-  const subscriptionDocuments = documents.filter(doc => doc.subscription_id);
-  const otherDocuments = documents.filter(doc => !doc.subscription_id);
+  const filteredDocuments = documents.filter(doc => 
+    activeTab === 'all' || doc.category === activeTab
+  );
 
   if (!user) {
     return null;
@@ -172,85 +164,32 @@ export default function Documents() {
           </Button>
         </div>
 
-        <Tabs defaultValue="all" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as typeof activeTab)}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All Documents</TabsTrigger>
-            <TabsTrigger value="subscriptions">Subscription Documents</TabsTrigger>
-            <TabsTrigger value="other">Other Documents</TabsTrigger>
+            {DOCUMENT_CATEGORIES.map(category => (
+              <TabsTrigger key={category} value={category}>
+                {category}
+              </TabsTrigger>
+            ))}
           </TabsList>
           
-          <TabsContent value="all" className="space-y-4">
+          <TabsContent value={activeTab} className="space-y-4">
             {isLoading ? (
               <div className="flex justify-center p-12">
                 <span>Loading documents...</span>
               </div>
-            ) : allDocuments.length === 0 ? (
+            ) : filteredDocuments.length === 0 ? (
               <div className="text-center py-16 bg-muted/30 rounded-lg border border-dashed">
                 <FileIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">No documents uploaded yet</p>
+                <p className="text-muted-foreground mb-4">No documents found in this category</p>
                 <Button onClick={() => setShowUploadModal(true)}>
                   Upload Your First Document
                 </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {allDocuments.map(doc => (
-                  <DocumentCard 
-                    key={doc.id} 
-                    document={doc} 
-                    onDelete={handleDelete}
-                    onDownload={handleDownload}
-                    fileIcon={getFileIcon(doc.file_type)}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="subscriptions" className="space-y-4">
-            {isLoading ? (
-              <div className="flex justify-center p-12">
-                <span>Loading documents...</span>
-              </div>
-            ) : subscriptionDocuments.length === 0 ? (
-              <div className="text-center py-16 bg-muted/30 rounded-lg border border-dashed">
-                <FileIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">No subscription documents uploaded yet</p>
-                <Button onClick={() => setShowUploadModal(true)}>
-                  Upload Document
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {subscriptionDocuments.map(doc => (
-                  <DocumentCard 
-                    key={doc.id} 
-                    document={doc} 
-                    onDelete={handleDelete}
-                    onDownload={handleDownload}
-                    fileIcon={getFileIcon(doc.file_type)}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="other" className="space-y-4">
-            {isLoading ? (
-              <div className="flex justify-center p-12">
-                <span>Loading documents...</span>
-              </div>
-            ) : otherDocuments.length === 0 ? (
-              <div className="text-center py-16 bg-muted/30 rounded-lg border border-dashed">
-                <FileIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">No other documents uploaded yet</p>
-                <Button onClick={() => setShowUploadModal(true)}>
-                  Upload Document
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {otherDocuments.map(doc => (
+                {filteredDocuments.map(doc => (
                   <DocumentCard 
                     key={doc.id} 
                     document={doc} 

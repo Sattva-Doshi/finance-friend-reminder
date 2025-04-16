@@ -15,11 +15,22 @@ interface DocumentUploadProps {
   onSuccess?: () => void;
 }
 
+export const DOCUMENT_CATEGORIES = [
+  'Invoices',
+  'Receipts',
+  'Statements',
+  'Tax Documents',
+  'Other'
+] as const;
+
+export type DocumentCategory = typeof DOCUMENT_CATEGORIES[number];
+
 export function DocumentUpload({ subscriptionId, onSuccess }: DocumentUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [selectedSubscription, setSelectedSubscription] = useState<string | undefined>(subscriptionId);
+  const [category, setCategory] = useState<DocumentCategory>('Other');
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -59,7 +70,6 @@ export function DocumentUpload({ subscriptionId, onSuccess }: DocumentUploadProp
       
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).slice(2)}.${fileExt}`;
-      // Only include subscription path if it's not "none"
       const filePath = `${selectedSubscription && selectedSubscription !== "none" ? `subscriptions/${selectedSubscription}/` : ''}${fileName}`;
 
       // Upload file to storage
@@ -77,7 +87,7 @@ export function DocumentUpload({ subscriptionId, onSuccess }: DocumentUploadProp
           file_path: filePath,
           file_type: file.type,
           description,
-          // Set subscription_id to null if "none" is selected
+          category,
           subscription_id: selectedSubscription && selectedSubscription !== "none" ? selectedSubscription : null,
           user_id: user.id,
         });
@@ -92,8 +102,8 @@ export function DocumentUpload({ subscriptionId, onSuccess }: DocumentUploadProp
       // Reset form
       setFile(null);
       setDescription('');
+      setCategory('Other');
       
-      // Call success callback if provided
       if (onSuccess) {
         onSuccess();
       }
@@ -118,6 +128,22 @@ export function DocumentUpload({ subscriptionId, onSuccess }: DocumentUploadProp
           accept=".pdf,.doc,.docx,.txt,.csv,.xlsx"
         />
         
+        <Select
+          value={category}
+          onValueChange={(value) => setCategory(value as DocumentCategory)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select document category" />
+          </SelectTrigger>
+          <SelectContent>
+            {DOCUMENT_CATEGORIES.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         {!subscriptionId && subscriptions.length > 0 && (
           <Select 
             value={selectedSubscription} 

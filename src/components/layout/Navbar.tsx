@@ -1,6 +1,5 @@
-
 import { Link, useLocation } from "react-router-dom";
-import { BellIcon, CalendarIcon, CreditCardIcon, HomeIcon, LayoutDashboardIcon, LineChartIcon, LogOutIcon, Menu, UserIcon, UsersIcon } from "lucide-react";
+import { BellIcon, CalendarIcon, CreditCardIcon, FileTextIcon, HomeIcon, LayoutDashboardIcon, LineChartIcon, LogOutIcon, Menu, UserIcon, UsersIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -13,6 +12,7 @@ const navItems = [
   { name: "Reminders", href: "/reminders", icon: BellIcon },
   { name: "Expenses", href: "/expenses", icon: LineChartIcon },
   { name: "Subscriptions", href: "/subscriptions", icon: CreditCardIcon },
+  { name: "Documents", href: "/documents", icon: FileTextIcon },
 ];
 
 export default function Navbar() {

@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Reminders from "./pages/Reminders";
 import Expenses from "./pages/Expenses";
 import Subscriptions from "./pages/Subscriptions";
+import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 import { AnimatePresence } from "framer-motion";
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/reminders" element={<Reminders />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/documents" element={<Documents />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

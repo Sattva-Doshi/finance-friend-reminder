@@ -148,9 +148,49 @@ export function useNotifications() {
     },
   });
 
+  // Invoke the upcoming notifications edge function manually
+  const checkUpcomingNotificationsMutation = useMutation({
+    mutationFn: async () => {
+      setIsLoading(true);
+      
+      try {
+        // Invoke the edge function to check for upcoming notifications
+        const { data, error } = await supabase.functions.invoke('send-upcoming-notifications', {
+          body: {}, // No specific payload needed, function will check for tomorrow's due items
+        });
+
+        if (error) {
+          console.error('Error invoking send-upcoming-notifications:', error);
+          throw error;
+        }
+        
+        return data;
+      } catch (error: any) {
+        console.error('Error in checkUpcomingNotifications:', error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Upcoming Notifications Processed',
+        description: `Processed ${data.reminders || 0} reminders and ${data.subscriptions || 0} subscriptions due tomorrow.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Failed to Process Notifications',
+        description: error.message || 'An error occurred while processing upcoming notifications.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     isLoading,
     sendReminderEmail: sendReminderEmailMutation.mutate,
     sendSubscriptionEmail: sendSubscriptionEmailMutation.mutate,
+    checkUpcomingNotifications: checkUpcomingNotificationsMutation.mutate,
   };
 }

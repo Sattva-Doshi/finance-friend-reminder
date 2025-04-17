@@ -2,12 +2,10 @@
 import React from "react";
 import { Card } from "@/components/common/Card";
 import { CompactCard } from "./card/CompactCard";
-import { CardAmount } from "./card/CardAmount";
 import { CardDetails } from "./card/CardDetails";
 import { CardMenu } from "./card/CardMenu";
 import { SubscriptionCardFooter } from "./card/CardFooter";
 import { SubscriptionCardProps } from "./types";
-import { DocumentUpload } from "@/components/documents/DocumentUpload";
 
 export default function SubscriptionCard({
   id,
@@ -47,14 +45,7 @@ export default function SubscriptionCard({
             inactive={inactive}
           />
         </div>
-        <CardAmount amount={amount} billingCycle={billingCycle} />
       </div>
-
-      {!compact && !inactive && (
-        <div className="px-4 pb-4">
-          <DocumentUpload subscriptionId={id} />
-        </div>
-      )}
       
       <SubscriptionCardFooter
         website={website}

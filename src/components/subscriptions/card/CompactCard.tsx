@@ -1,12 +1,10 @@
 
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, IndianRupeeIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/common/Card";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import React from "react";
-import { getTimeRemaining } from "../utils/billingUtils";
-import { CardAmount } from "./CardAmount";
-import { formatBillingCycle } from "../utils/billingUtils";
+import { getTimeRemaining, formatBillingCycle } from "../utils/billingUtils";
 import { CompactCardProps } from "../types";
 
 export const CompactCard = ({
@@ -38,11 +36,13 @@ export const CompactCard = ({
                 </span>
               </div>
             </div>
-            <CardAmount 
-              amount={amount}
-              billingCycle={formatBillingCycle(billingCycle)}
-              compact={true}
-            />
+            <div className="text-right">
+              <p className="text-lg font-semibold flex items-center justify-end">
+                <IndianRupeeIcon className="h-3.5 w-3.5 mr-1" />
+                {amount.toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground">{formatBillingCycle(billingCycle)}</p>
+            </div>
           </div>
         </CardContent>
       </Card>

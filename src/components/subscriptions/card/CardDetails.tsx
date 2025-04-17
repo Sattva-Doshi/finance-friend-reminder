@@ -14,32 +14,31 @@ export const CardDetails = ({
 }: CardDetailsProps) => {
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center">
-          <span className="badge-muted">
-            {getCategoryIcon(category)}
-          </span>
-          <span className="text-sm ml-2">{formatBillingCycle(billingCycle)}</span>
-        </div>
-        <span className="text-2xl font-semibold flex items-center">
+      <div className="flex items-center mt-2 mb-4">
+        <span className="badge-muted mr-2">
+          {getCategoryIcon(category)}
+        </span>
+        <span className="text-sm">{formatBillingCycle(billingCycle)}</span>
+      </div>
+      
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xl font-semibold flex items-center">
           <IndianRupeeIcon className="h-4 w-4 mr-1" />
           {amount.toFixed(2)}
         </span>
-      </div>
-      
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center text-muted-foreground">
-          <CalendarIcon className="h-3.5 w-3.5 mr-1" />
-          <span>
-            {inactive 
-              ? "Canceled" 
-              : `Next payment: ${nextBillingDate.toLocaleDateString()}`
-            }
-          </span>
-        </div>
-        <span className="text-muted-foreground flex items-center">
+        <span className="text-sm text-muted-foreground flex items-center">
           <IndianRupeeIcon className="h-3 w-3 mr-0.5" />
           {getMonthlyEquivalent(amount, billingCycle).toFixed(2)}/mo
+        </span>
+      </div>
+      
+      <div className="flex items-center text-sm text-muted-foreground">
+        <CalendarIcon className="h-3.5 w-3.5 mr-1" />
+        <span>
+          {inactive 
+            ? "Canceled" 
+            : `Next payment: ${nextBillingDate.toLocaleDateString()}`
+          }
         </span>
       </div>
     </>

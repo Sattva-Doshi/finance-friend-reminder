@@ -29,13 +29,6 @@ export interface CardDetailsProps {
   inactive?: boolean;
 }
 
-// Props for card amount component
-export interface CardAmountProps {
-  amount: number;
-  billingCycle: string;
-  compact?: boolean;
-}
-
 // Props for card footer component
 export interface CardFooterProps {
   website?: string;

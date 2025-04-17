@@ -1,10 +1,10 @@
-import { CalendarIcon, CheckCircle2Icon, Clock10Icon, CreditCardIcon, DollarSignIcon, HomeIcon, InfoIcon, MailIcon, RefreshCcwIcon, ZapIcon } from "lucide-react";
+
+import { CalendarIcon, CheckCircle2Icon, Clock10Icon, CreditCardIcon, DollarSignIcon, HomeIcon, InfoIcon, RefreshCcwIcon, ZapIcon } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/common/Card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { useNotifications } from "@/hooks/use-notifications";
 
 type ReminderCategory = 
   | "credit-card" 
@@ -42,7 +42,6 @@ export default function ReminderCard({
   onSnooze,
 }: ReminderCardProps) {
   const { toast } = useToast();
-  const { sendReminderEmail, isLoading } = useNotifications();
   
   const getCategoryIcon = () => {
     switch (category) {
@@ -98,20 +97,6 @@ export default function ReminderCard({
         description: `'${title}' has been snoozed for 1 day.`,
       });
     }
-  };
-
-  const handleSendEmail = () => {
-    sendReminderEmail({
-      id,
-      title,
-      amount,
-      dueDate
-    });
-    
-    toast({
-      title: "Email notification sent",
-      description: `A payment reminder for '${title}' has been sent to your email.`,
-    });
   };
 
   return (
@@ -177,16 +162,6 @@ export default function ReminderCard({
               onClick={handleSnooze}
             >
               Snooze
-            </Button>
-            <Button
-              className="flex-1 mt-2 w-full"
-              size="sm"
-              variant="secondary"
-              onClick={handleSendEmail}
-              disabled={isLoading}
-            >
-              <MailIcon className="h-4 w-4 mr-2" />
-              Email Reminder
             </Button>
           </CardFooter>
         )}

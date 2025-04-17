@@ -41,3 +41,10 @@ export interface CardMenuProps {
   onCancel: () => void;
   onEdit?: () => void;
 }
+
+// Props for card amount component
+export interface CardAmountProps {
+  amount: number;
+  billingCycle: string;
+  compact?: boolean;
+}

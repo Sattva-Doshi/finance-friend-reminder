@@ -9,21 +9,14 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { FileIcon, Loader2Icon, UploadIcon } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { DOCUMENT_CATEGORIES, DocumentCategory } from "./types";
 
 interface DocumentUploadProps {
   subscriptionId?: string;
   onSuccess?: () => void;
 }
 
-export const DOCUMENT_CATEGORIES = [
-  'Invoices',
-  'Receipts',
-  'Statements',
-  'Tax Documents',
-  'Other'
-] as const;
-
-export type DocumentCategory = typeof DOCUMENT_CATEGORIES[number];
+export { DOCUMENT_CATEGORIES, type DocumentCategory };
 
 export function DocumentUpload({ subscriptionId, onSuccess }: DocumentUploadProps) {
   const [isUploading, setIsUploading] = useState(false);

@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,19 +18,39 @@ const authSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters long"),
 });
 
+const signUpSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 type AuthFormValues = z.infer<typeof authSchema>;
+type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 export function AuthForm() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
 
-  const form = useForm<AuthFormValues>({
+  const signInForm = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
     defaultValues: {
       email: '',
       password: '',
+    },
+  });
+
+  const signUpForm = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
     },
   });
 
@@ -72,7 +91,7 @@ export function AuthForm() {
     }
   };
 
-  const handleSignUp = async (values: AuthFormValues) => {
+  const handleSignUp = async (values: SignUpFormValues) => {
     try {
       setIsSubmitting(true);
       setAuthError(null);
@@ -109,9 +128,8 @@ export function AuthForm() {
             description: "Account created successfully. Please sign in.",
           });
           
-          form.reset();
-          const signinTab = document.querySelector('[data-value="signin"]') as HTMLElement;
-          if (signinTab) signinTab.click();
+          signUpForm.reset();
+          setActiveTab("signin");
         } else {
           toast({
             title: "Account created",
@@ -127,9 +145,8 @@ export function AuthForm() {
         description: "You can now sign in with your new account",
       });
       
-      form.reset();
-      const signinTab = document.querySelector('[data-value="signin"]') as HTMLElement;
-      if (signinTab) signinTab.click();
+      signUpForm.reset();
+      setActiveTab("signin");
       
     } catch (error: any) {
       console.error('Sign up error details:', error);
@@ -163,17 +180,17 @@ export function AuthForm() {
         </Alert>
       )}
       
-      <Tabs defaultValue="signin" className="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "signin" | "signup")} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="signin">Sign In</TabsTrigger>
           <TabsTrigger value="signup">Sign Up</TabsTrigger>
         </TabsList>
         
         <TabsContent value="signin" className="space-y-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSignIn)} className="space-y-4">
+          <Form {...signInForm}>
+            <form onSubmit={signInForm.handleSubmit(handleSignIn)} className="space-y-4">
               <FormField
-                control={form.control}
+                control={signInForm.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
@@ -191,7 +208,7 @@ export function AuthForm() {
               />
               
               <FormField
-                control={form.control}
+                control={signInForm.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
@@ -220,10 +237,10 @@ export function AuthForm() {
         </TabsContent>
         
         <TabsContent value="signup" className="space-y-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-4">
+          <Form {...signUpForm}>
+            <form onSubmit={signUpForm.handleSubmit(handleSignUp)} className="space-y-4">
               <FormField
-                control={form.control}
+                control={signUpForm.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
@@ -241,11 +258,29 @@ export function AuthForm() {
               />
               
               <FormField
-                control={form.control}
+                control={signUpForm.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="••••••••" 
+                        type="password"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={signUpForm.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="••••••••" 

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -16,8 +15,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Download } from 'lucide-react';
 
-// Form validation schema
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters long"),
@@ -31,8 +30,8 @@ export default function Auth() {
   const { user, isLoading, refetchSession } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
-  // Initialize react-hook-form
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
     defaultValues: {
@@ -42,16 +41,31 @@ export default function Auth() {
   });
 
   useEffect(() => {
-    // If we're already authenticated, redirect to home
     if (user && !isLoading) {
       navigate('/');
     }
   }, [user, isLoading, navigate]);
 
-  // If we're already authenticated, don't render the auth page
   if (user && !isLoading) {
     return <Navigate to="/" />;
   }
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setDeferredPrompt(null);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
 
   const handleSignIn = async (values: AuthFormValues) => {
     try {
@@ -99,12 +113,10 @@ export default function Auth() {
       
       console.log('Signing up with:', values.email);
       
-      // Sign up without email confirmation
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
-          // Skip email confirmation by setting data.email_confirmed
           data: {
             email_confirmed: true
           }
@@ -118,7 +130,6 @@ export default function Auth() {
         throw error;
       }
       
-      // After successful signup, try to sign in automatically
       if (data && data.user) {
         console.log('Auto sign-in after registration');
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -133,7 +144,6 @@ export default function Auth() {
             description: "Account created successfully. Please sign in.",
           });
           
-          // Reset form and switch to sign in tab (fixing the TypeScript error)
           form.reset();
           const signinTab = document.querySelector('[data-value="signin"]') as HTMLElement;
           if (signinTab) signinTab.click();
@@ -153,7 +163,6 @@ export default function Auth() {
         description: "You can now sign in with your new account",
       });
       
-      // Reset form and switch to sign in tab
       form.reset();
       const signinTab = document.querySelector('[data-value="signin"]') as HTMLElement;
       if (signinTab) signinTab.click();
@@ -161,7 +170,6 @@ export default function Auth() {
     } catch (error: any) {
       console.error('Sign up error details:', error);
       
-      // Handle specific error cases
       if (error.message.includes('User already registered')) {
         setAuthError('This email is already registered. Please try signing in instead.');
         toast({
@@ -234,9 +242,19 @@ export default function Auth() {
     }
   };
 
+  const handleInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    }
+  };
+
   return (
     <PageTransition>
-      <div className="flex items-center justify-center min-h-screen px-4 py-12">
+      <div className="flex items-center justify-center min-h-screen px-4 py-12 relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -401,6 +419,17 @@ export default function Auth() {
             </CardFooter>
           </Card>
         </motion.div>
+        
+        {deferredPrompt && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="fixed bottom-4 right-4 p-2 rounded-full shadow-lg"
+            onClick={handleInstall}
+          >
+            <Download className="h-6 w-6" />
+          </Button>
+        )}
       </div>
     </PageTransition>
   );
